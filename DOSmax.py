@@ -98,6 +98,15 @@ def main(file):
         except Exception as e:
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
+    data = computeDOS(data)
+    fitDOS(data, (low, high), criterion, thresholds, result_file=project_directory(file) + "resonances.txt")
+
+    input_string = f"\nPlease specify your next action: \n\n    'p': plot best fit for all resonances\n"
+    populated_thresholds = set([res.threshold for res in Resonance.resonances])
+    for i, t in enumerate(thresholds):
+        if t in populated_thresholds:
+            input_string += f"    'p{i}': plot best fit for all resonances below threshold {t}\n"
+    input_string += "    'x': exit\n"
 
 
 
