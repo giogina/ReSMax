@@ -40,6 +40,64 @@ def main(file):
                             f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
                             "    'x': exit\n"
                             )
+        try:
+            if next_action == 'rspp':
+                criterion = 'rspp'
+                print("DOS fits sorted by least relative SSR per data point.")
+            elif next_action == 'ssr':
+                criterion = 'ssr'
+                print("DOS fits sorted by least sum of square residues (SSR).")
+            elif next_action == 'd':
+                DOSpeak.discontinuity_treatment = 'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'
+            elif next_action == 'x':
+                exit()
+            elif next_action == 'z':
+                ok = False
+                while not ok:
+                    inp_z = input("Z = ")
+                    try:
+                        z = int(inp_z)
+                        n = 1
+                        thresholds = [-z * z / 2.]
+                        if max_e is None or max_e >= 0:
+                            max_e = -z * z / 2. / 36  # should never happen - limit to 6 threshold values
+                        while thresholds[-1] < max_e:
+                            n += 1
+                            thresholds.append(-z * z / 2. / n / n)
+                        print(f"Threshold values: {' '.join([str(t) for t in thresholds if t > min_e])}")
+                        ok = True
+                    except:
+                        print("Please input an integer.")
+            elif next_action == 't':
+                ok = False
+                while not ok:
+                    inp_t = input("Threshold values (separate by space) = ")
+                    try:
+                        thresholds = [float(t) for t in inp_t.split()]
+                        thresholds.sort()
+                        print(f"Threshold values: {' '.join([str(t) for t in thresholds])}")
+                        ok = True
+                    except Exception as e:
+                        print("Please input a space-separated list of floats.")
+            else:
+                response = next_action.split(' ')
+                if len(response) == 3:
+                    action = response[0]
+                    low = float(response[1])
+                    high = float(response[2])
+                    if action == "o":
+                        redo_overview = True
+                elif len(response) == 1 and response[0] == "o":  # reset overview
+                    low = None
+                    high = 0
+                    redo_overview = True
+                elif len(response) == 1 and response[0] == "r":  # proceed to DOS fit
+                    break
+                else:
+                    print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
+        except Exception as e:
+            print(e)
+            print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
 
 
 
