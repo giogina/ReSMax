@@ -107,7 +107,18 @@ def main(file):
         if t in populated_thresholds:
             input_string += f"    'p{i}': plot best fit for all resonances below threshold {t}\n"
     input_string += "    'x': exit\n"
-
+    while True:
+        action = input(input_string)
+        if action == 'p':
+            plot.resonance_fits(project_directory(file), Resonance.resonances)
+            break
+        elif action in [f'p{i}' for i, t in enumerate(thresholds)]:
+            i = int(action[1:])
+            plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
+        elif action == 'x':
+            break
+        else:
+            print("Invalid input.")
 
 
 if __name__ == "__main__":
