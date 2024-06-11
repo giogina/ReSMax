@@ -5,7 +5,15 @@ import numpy as np
 
 
 def computeDOS(data):
+    """
+    Compute the Density of States (DOS) based on gamma and root data.
 
+    Parameters:
+    data (dict): Parsed data containing gamma and root arrays.
+
+    Returns:
+    dict: Data with additional DOS arrays added.
+    """
     roots = list(data.keys())
     roots.remove("gamma")
     num = data["gamma"][2:] - data["gamma"][:-2]  # This seems unnecessarily inaccurate. Why not i to i+1, with E in the middle?
