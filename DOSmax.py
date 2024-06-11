@@ -4,6 +4,18 @@ import argparse
 import numpy as np
 
 
+def computeDOS(data):
+
+    roots = list(data.keys())
+    roots.remove("gamma")
+    num = data["gamma"][2:] - data["gamma"][:-2]  # This seems unnecessarily inaccurate. Why not i to i+1, with E in the middle?
+    for root in roots:
+        den = (data[root][2:] - data[root][:-2])
+        data[f"rho_{root}"] = np.abs(num / den) if 0 not in list(den) else np.zeros(len(num))
+    return data
+
+
+
 
 def main(file):
     """
