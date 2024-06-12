@@ -24,7 +24,16 @@ def computeDOS(data):
 
 
 def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
+    """
+    Fit DOS data using Lorentzian models and find resonances.
 
+    Parameters:
+    data (dict): Parsed data containing energy and DOS arrays.
+    energy_range (tuple): Tuple specifying the energy range to consider for fitting.
+    fit_criterion (str): Criterion for fitting ('ssr' or 'rspp').
+    thresholds (list): List of energy thresholds for categorizing resonances.
+    result_file (str): Path to the file where results will be written.
+    """
     data_keys = list(data.keys())
     data_keys = [k for k in data_keys if type(k) is str and k.startswith("rho_")]
     data_keys.sort(
