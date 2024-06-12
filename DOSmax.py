@@ -23,6 +23,43 @@ def computeDOS(data):
     return data
 
 
+def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
+
+    data_keys = list(data.keys())
+    data_keys = [k for k in data_keys if type(k) is str and k.startswith("rho_")]
+    data_keys.sort(
+        key=lambda k: min(data[int(k[4:])]))  # It seems DOS maxima are best sampled as they come into view bottom->top.
+    fitted_peaks_by_root = {}
+    lowest_populated_threshold = None
+    with open(result_file, 'w') as save_file:
+        save_file.write("MBS:\r\n")
+    print("Scanning all local DOS maxima...")
+    for key in data_keys:
+        root = int(key[4:])
+        energy_array = data[root][1:-1]
+        gamma_array = data["gamma"][1:-1]
+        dos_array = data[key]
+        fitted_peaks_by_root[root] = []
+        thresholds_above = [t for t in thresholds if min(energy_array) < t]
+        if len(thresholds_above):
+            if lowest_populated_threshold is None:
+                lowest_populated_threshold = thresholds_above[0]
+            if lowest_populated_threshold == thresholds_above[0]:
+                print(f"MBS: Root {root}, E = {min(energy_array)}")
+                with open(result_file, 'a') as save_file:
+                    save_file.write(f"Root {root}, E = {min(energy_array)}\r\n")
+        print("range", energy_range)
+        if energy_range != (None, None):
+            min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
+            max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
+            local_mins = signal.find_peaks(-energy_array)
+            min_i = 0 if len(local_mins[0]) == 0 else max(local_mins[0])
+            included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and min_i <= i]
+            energy_array = np.array([energy_array[i] for i in included_indices])
+            gamma_array = np.array([gamma_array[i] for i in included_indices])
+            dos_array = np.array([dos_array[i] for i in included_indices])
+
+
 
 
 def main(file):
