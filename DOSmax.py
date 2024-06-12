@@ -68,7 +68,44 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
             gamma_array = np.array([gamma_array[i] for i in included_indices])
             dos_array = np.array([dos_array[i] for i in included_indices])
 
+        peaks, _ = signal.find_peaks(dos_array)
+        valleys, _ = signal.find_peaks(-dos_array)
+        if len(peaks) == 0:
+            continue
+        if len(valleys) == 0 or valleys[0] > peaks[0]:
+            valleys = np.concatenate([np.array([0]), valleys])
+        if len(valleys) == 0 or valleys[-1] < peaks[-1]:
+            valleys = np.concatenate([valleys, np.array([len(dos_array) - 1])])
 
+
+    current_threshold = None
+    with open(result_file, 'a') as save_file:
+        for res in Resonance.resonances:
+            if res.threshold != current_threshold:
+                current_threshold = res.threshold
+                print(f"\nResonances found below threshold {current_threshold}:")
+                save_file.write(f"\r\nResonances found below threshold {current_threshold}:\r\n")
+                save_file.write(f"Energy             Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
+            print(f"{res.energy}, Root {res.best_fit.root}, SSR {res.best_fit.ssr}, Rel. SSR per point {res.best_fit.rel_ssr_per_point}, gamma = {res.best_fit.fit_gamma}, Gamma = {res.best_fit.fit_Gamma}, A = {res.best_fit.fit_A}, y0 = {res.best_fit.fit_y0}, Other roots = {[p.root for p in res.peaks]}")
+            save_file.write(
+                f"{res.energy:.15f}".ljust(18, '0') + "\t" +
+                f"{res.best_fit.root}\t" +
+                f"{res.best_fit.fit_gamma:.15f}".ljust(18, '0') + "\t" +
+                f"{res.best_fit.ssr:.15f}".ljust(18, '0')[:18] + "\t" +
+                f"{res.best_fit.rel_ssr_per_point:.15f}".ljust(18, '0') + "\t" +
+                f"{res.best_fit.fit_Gamma:.15f}".ljust(18, '0') + "\t" +
+                f"{res.best_fit.fit_A:.15f}".ljust(18, '0') + "\t" +
+                f"{res.best_fit.fit_y0:.15f}".ljust(18, '0') + "\t" +
+                f"{[p.root for p in res.peaks]} \t" +
+                f"{'!Warning! '+res.best_fit.warning if res.best_fit.warning is not None else ''}"
+                +"\r\n"
+            )
+    print(f"\nResults have been written to {result_file}.")
+
+    # TODO: better treatment of pointwise maximum energy - e.g. the figures are still named using fit_E I think? Also, show whole range (including dropped points) of fit.
+    #  Also, why is first [19] not included in following resonance? Use other E for that?
+    #  Allow turning on/off of auto-trim.
+    #  Give a slightly larger allowance for the fit_check.
 
 
 def main(file):
