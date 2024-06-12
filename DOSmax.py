@@ -77,6 +77,31 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
         if len(valleys) == 0 or valleys[-1] < peaks[-1]:
             valleys = np.concatenate([valleys, np.array([len(dos_array) - 1])])
 
+        if len(valleys) and len(peaks):
+            ip = 0
+            for iv in range(0, len(valleys) - 1):
+                v = valleys[iv]
+                v2 = valleys[iv + 1] + 1
+                p = peaks[ip]
+                while p < v and len(peaks) > ip + 1:
+                    ip += 1
+                    p = peaks[ip]
+                if v < p < v2:  # successfully identified section
+                    peak_E = float(energy_array[p])
+                    peak_rho = float(dos_array[p])
+                    if v2 - v >= 10:  # necessary to fit all parameters
+                        energies = energy_array[v:v2]
+                        gammas = gamma_array[v:v2]
+                        rhos = dos_array[v:v2]
+                        dp = DOSpeak(energies, rhos, gammas, root, peak_E, peak_rho)
+                        fitted_paras = dp.fit_lorentzian()
+                        if fitted_paras is not None and dp.energy() > lowest_populated_threshold:
+                            fitted_peaks_by_root[root].append(dp)
+
+    find_resonances(fitted_peaks_by_root)
+    for res in Resonance.resonances:
+        res.categorize_by_thresholds(thresholds)
+    Resonance.resonances.sort(key=lambda res: res.energy)
 
     current_threshold = None
     with open(result_file, 'a') as save_file:
