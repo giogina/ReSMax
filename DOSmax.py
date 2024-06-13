@@ -10,6 +10,9 @@ from resonance import find_resonances, Resonance
 
 verbose = False
 
+def lorentzian(E, y0, A, Gamma, Er):
+    return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
