@@ -3,6 +3,12 @@ from scipy import signal
 import argparse
 import numpy as np
 
+from DOSpeak import DOSpeak
+from data_parser import parse, project_directory
+import plot
+from resonance import find_resonances, Resonance
+
+verbose = False
 
 def computeDOS(data):
     """
