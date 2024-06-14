@@ -60,6 +60,23 @@ class DOSpeak:
                         f"Root {self.root}, peak {self.approx_peak_E}: {len(rho) - trim_right} points trimmed off right.")
             return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
 
+        def trim_half(self, energy, dos):
+            deriv_num = (dos[1:] - dos[:-1])
+            deriv = deriv_num / (energy[1:] - energy[:-1])
+            steepening = True
+            prev_delta = 0
+            for i, delta in enumerate(deriv):
+                if abs(deriv_num[i]) > 0.6 * max(dos):
+                    # print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
+                    return i + 1
+                if steepening and abs(delta) < abs(prev_delta):
+                    steepening = False  # we're past the steepest point of the peak flank
+                if not steepening and abs(delta) > abs(prev_delta):
+                    # print(f"i={i}, re-steepening cut-off")
+                    return i  # getting steeper again; cut off here.
+                prev_delta = delta
+            return len(dos)  # no trimming condition found; use whole arrays
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
