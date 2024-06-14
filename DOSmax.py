@@ -40,6 +40,26 @@ class DOSpeak:
         self.nr_fit_attempts = 0
         self.warning = None
 
+        def trim(self, energy, rho, gamma):
+            highest_i = np.argmax(rho)
+            left_energy = energy[:highest_i + 1]
+            left_energy_reverse = left_energy[::-1]
+            left_rho = rho[:highest_i + 1]
+            left_rho_reverse = left_rho[::-1]
+            right_energy = energy[highest_i:]
+            right_rho = rho[highest_i:]
+            trim_left = len(left_rho) - self.trim_half(left_energy_reverse, left_rho_reverse)
+            trim_right = len(left_rho) + self.trim_half(right_energy, right_rho)
+            self.trim_left = trim_left
+            self.trim_right = len(rho) - trim_right
+            if verbose:
+                if trim_left > 0:
+                    print(f"Root {self.root}, peak {self.approx_peak_E}: {trim_left} points trimmed off left.")
+                if trim_right < len(rho):
+                    print(
+                        f"Root {self.root}, peak {self.approx_peak_E}: {len(rho) - trim_right} points trimmed off right.")
+            return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
