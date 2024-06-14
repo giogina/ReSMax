@@ -13,6 +13,33 @@ verbose = False
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
+class DOSpeak:
+    discontinuity_treatment = "fit"
+
+    def __init__(self, energy, rho, gamma, root: int, peak_E, peak_rho):
+        self.root = root
+        self.approx_peak_E = peak_E
+        self.approx_peak_rho = peak_rho
+        self.approx_y0 = min(rho) / 2
+        self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
+        # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
+        self.energy_below, self.energy_above = self.max_energy_window(energy, rho)  # fit_E needs to fall between these
+        self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
+        self.fitted_dos_array = None
+        self.fit_E = None
+        self.fit_Gamma = None
+        self.fit_A = None
+        self.fit_y0 = None
+        self.fit_gamma = None
+        self.ssr = None
+        self.rel_ssr_per_point = None
+        self.worse = []
+        self.trim_left = 0
+        self.trim_right = 0
+        self.using_pointwise_energy = False
+        self.nr_fit_attempts = 0
+        self.warning = None
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
