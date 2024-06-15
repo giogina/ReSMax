@@ -40,67 +40,76 @@ class DOSpeak:
         self.nr_fit_attempts = 0
         self.warning = None
 
-        def trim(self, energy, rho, gamma):
-            highest_i = np.argmax(rho)
-            left_energy = energy[:highest_i + 1]
-            left_energy_reverse = left_energy[::-1]
-            left_rho = rho[:highest_i + 1]
-            left_rho_reverse = left_rho[::-1]
-            right_energy = energy[highest_i:]
-            right_rho = rho[highest_i:]
-            trim_left = len(left_rho) - self.trim_half(left_energy_reverse, left_rho_reverse)
-            trim_right = len(left_rho) + self.trim_half(right_energy, right_rho)
-            self.trim_left = trim_left
-            self.trim_right = len(rho) - trim_right
-            if verbose:
-                if trim_left > 0:
-                    print(f"Root {self.root}, peak {self.approx_peak_E}: {trim_left} points trimmed off left.")
-                if trim_right < len(rho):
-                    print(
-                        f"Root {self.root}, peak {self.approx_peak_E}: {len(rho) - trim_right} points trimmed off right.")
-            return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
+    def trim(self, energy, rho, gamma):
+        highest_i = np.argmax(rho)
+        left_energy = energy[:highest_i + 1]
+        left_energy_reverse = left_energy[::-1]
+        left_rho = rho[:highest_i + 1]
+        left_rho_reverse = left_rho[::-1]
+        right_energy = energy[highest_i:]
+        right_rho = rho[highest_i:]
+        trim_left = len(left_rho) - self.trim_half(left_energy_reverse, left_rho_reverse)
+        trim_right = len(left_rho) + self.trim_half(right_energy, right_rho)
+        self.trim_left = trim_left
+        self.trim_right = len(rho) - trim_right
+        if verbose:
+            if trim_left > 0:
+                print(f"Root {self.root}, peak {self.approx_peak_E}: {trim_left} points trimmed off left.")
+            if trim_right < len(rho):
+                print(
+                    f"Root {self.root}, peak {self.approx_peak_E}: {len(rho) - trim_right} points trimmed off right.")
+        return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
 
-        def trim_half(self, energy, dos):
-            deriv_num = (dos[1:] - dos[:-1])
-            deriv = deriv_num / (energy[1:] - energy[:-1])
-            steepening = True
-            prev_delta = 0
-            for i, delta in enumerate(deriv):
-                if abs(deriv_num[i]) > 0.6 * max(dos):
-                    # print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
-                    return i + 1
-                if steepening and abs(delta) < abs(prev_delta):
-                    steepening = False  # we're past the steepest point of the peak flank
-                if not steepening and abs(delta) > abs(prev_delta):
-                    # print(f"i={i}, re-steepening cut-off")
-                    return i  # getting steeper again; cut off here.
-                prev_delta = delta
-            return len(dos)  # no trimming condition found; use whole arrays
+    def trim_half(self, energy, dos):
+        deriv_num = (dos[1:] - dos[:-1])
+        deriv = deriv_num / (energy[1:] - energy[:-1])
+        steepening = True
+        prev_delta = 0
+        for i, delta in enumerate(deriv):
+            if abs(deriv_num[i]) > 0.6 * max(dos):
+                # print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
+                return i + 1
+            if steepening and abs(delta) < abs(prev_delta):
+                steepening = False  # we're past the steepest point of the peak flank
+            if not steepening and abs(delta) > abs(prev_delta):
+                # print(f"i={i}, re-steepening cut-off")
+                return i  # getting steeper again; cut off here.
+            prev_delta = delta
+        return len(dos)  # no trimming condition found; use whole arrays
 
-        def get_smooth_lorentzian_curve(self, x_array):
-            return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
+    def get_smooth_lorentzian_curve(self, x_array):
+        return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
 
-        def print_fitted_parameters(self):
-            print(
-                f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
+    def print_fitted_parameters(self):
+        print(
+            f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
 
-        def estimate_gamma(self):
-            half_max = 0.5 * self.approx_peak_rho
-            max_index = np.argmax(self.dos_array)
-            dos_left = self.dos_array[:max_index]
-            dos_right = self.dos_array[max_index:]
-            # indices = np.where(self.dos_array > half_max)[0]
-            indices_left = np.where(dos_left > half_max)[0]
-            indices_right = np.where(dos_right > half_max)[0]
-            if len(indices_left) + len(indices_right) < 2:
-                return self.energy_array[1] - self.energy_array[0]  # not enough data points, rough guess
-            # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
-            left_width = abs(self.approx_peak_E - self.energy_array[indices_left[0]]) if len(indices_left) else 0
-            right_width = abs(self.approx_peak_E - (self.energy_array[indices_right[-1] + max_index])) if len(
-                indices_right) else 0
-            return 2 * max(left_width, right_width)  # Deal with half-peak cases
-            # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
+    def estimate_gamma(self):
+        half_max = 0.5 * self.approx_peak_rho
+        max_index = np.argmax(self.dos_array)
+        dos_left = self.dos_array[:max_index]
+        dos_right = self.dos_array[max_index:]
+        # indices = np.where(self.dos_array > half_max)[0]
+        indices_left = np.where(dos_left > half_max)[0]
+        indices_right = np.where(dos_right > half_max)[0]
+        if len(indices_left) + len(indices_right) < 2:
+            return self.energy_array[1] - self.energy_array[0]  # not enough data points, rough guess
+        # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
+        left_width = abs(self.approx_peak_E - self.energy_array[indices_left[0]]) if len(indices_left) else 0
+        right_width = abs(self.approx_peak_E - (self.energy_array[indices_right[-1] + max_index])) if len(
+            indices_right) else 0
+        return 2 * max(left_width, right_width)  # Deal with half-peak cases
+        # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
 
+    def initial_guesses(self):
+        y0 = self.approx_y0
+        Gamma = self.estimate_gamma()
+        A = self.approx_peak_rho * np.pi * Gamma / 2
+        Er = self.approx_peak_E
+        mid_index = int(len(self.dos_array)/2)
+        y0 += self.dos_array[mid_index] - lorentzian(self.energy_array[mid_index], y0, A, Gamma, Er)
+
+        return [y0, A, Gamma, Er]
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
