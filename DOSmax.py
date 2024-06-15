@@ -77,6 +77,13 @@ class DOSpeak:
                 prev_delta = delta
             return len(dos)  # no trimming condition found; use whole arrays
 
+        def get_smooth_lorentzian_curve(self, x_array):
+            return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
+
+        def print_fitted_parameters(self):
+            print(
+                f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
