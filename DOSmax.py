@@ -128,7 +128,15 @@ class DOSpeak:
         return 2*max(left_width, right_width)  # Deal with half-peak cases
         # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
 
+    def initial_guesses(self):
+        y0 = self.approx_y0
+        Gamma = self.estimate_gamma()
+        A = self.approx_peak_rho * np.pi * Gamma / 2
+        Er = self.approx_peak_E
+        mid_index = int(len(self.dos_array)/2)
+        y0 += self.dos_array[mid_index] - lorentzian(self.energy_array[mid_index], y0, A, Gamma, Er)
 
+        return [y0, A, Gamma, Er]
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
