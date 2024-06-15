@@ -84,6 +84,19 @@ class DOSpeak:
             print(
                 f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
 
+        def estimate_gamma(self):
+            half_max = 0.5 * self.approx_peak_rho
+            max_index = np.argmax(self.dos_array)
+            dos_left = self.dos_array[:max_index]
+            dos_right = self.dos_array[max_index:]
+            # indices = np.where(self.dos_array > half_max)[0]
+            indices_left = np.where(dos_left > half_max)[0]
+            indices_right = np.where(dos_right > half_max)[0]
+            if len(indices_left) + len(indices_right) < 2:
+                return self.energy_array[1] - self.energy_array[0]  # not enough data points, rough guess
+
+            # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
