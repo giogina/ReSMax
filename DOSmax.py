@@ -155,9 +155,26 @@ class DOSpeak:
             guessed_peak.fit_Gamma = Gamma
             plot.peak_fit(guessed_peak, f"/home/giogina/Desktop/DOSmax/stb_plot_pf/{Er}.png")
         self.nr_fit_attempts += 1
+        try:
+            guesses = self.initial_guesses()
+            if self.nr_fit_attempts == 1:
+                cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses)
+            else:
+                cv = optimize.curve_fit(lorentzian, np.insert(self.energy_array, 0, self.approx_peak_E-5*guesses[2]),
+                                        np.insert(self.dos_array, 0, guesses[0]), p0=guesses)
+        except Exception as e:
+            if verbose:
+                print(f"Root {self.root}: Fit failed for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
+            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
+                if verbose: print("Retrying...")  # todo: also retry above?
+                self.approx_peak_E -= 0.0001  # todo: less arbitrary steps
+                self.approx_peak_rho -= 0.0001 * (self.dos_array[2] - self.dos_array[1])/(self.energy_array[2] - self.energy_array[1])
+            if self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
+                return self.fit_lorentzian()
+            else:
+                self.using_pointwise_energy = True
+                return None
 
-
-        return popt
 
 def computeDOS(data):
     """
