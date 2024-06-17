@@ -186,7 +186,9 @@ class DOSpeak:
             self.rel_ssr_per_point = math.sqrt(self.ssr) / (len(self.dos_array)) / self.approx_peak_rho
             self.fit_E = popt[3]
             self.fit_Gamma = popt[2]
-
+            self.fit_A = popt[1]
+            self.fit_y0 = popt[0]
+            self.fit_gamma = np.interp(self.fit_E, self.energy_array, self.gamma_array)
 
             if verbose:
                 print(f"Root {self.root}: Er = {int(popt[3] * 10000) / 10000}, Gamma = {int(popt[2] * 1000000) / 1000000}, A = {int(popt[1] * 10000) / 10000}, y0 = {int(popt[0] * 1000) / 1000};     Relative SSR per data point: {self.rel_ssr_per_point}")
@@ -194,6 +196,7 @@ class DOSpeak:
             self.check_fit()
 
             return popt
+
 
 def computeDOS(data):
     """
