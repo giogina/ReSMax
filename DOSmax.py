@@ -174,7 +174,26 @@ class DOSpeak:
             else:
                 self.using_pointwise_energy = True
                 return None
+        popt = cv[0]
+        pcov = cv[1]
+        if np.any(np.isinf(pcov)):
+            if verbose:
+                print(f"Root {self.root}: Fit did not converge for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
+            return None
+        else:
+            self.fitted_dos_array = np.array([lorentzian(e, *popt) for e in self.energy_array])
+            self.ssr = np.sum((self.dos_array - self.fitted_dos_array) ** 2)
+            self.rel_ssr_per_point = math.sqrt(self.ssr) / (len(self.dos_array)) / self.approx_peak_rho
+            self.fit_E = popt[3]
+            self.fit_Gamma = popt[2]
 
+
+            if verbose:
+                print(f"Root {self.root}: Er = {int(popt[3] * 10000) / 10000}, Gamma = {int(popt[2] * 1000000) / 1000000}, A = {int(popt[1] * 10000) / 10000}, y0 = {int(popt[0] * 1000) / 1000};     Relative SSR per data point: {self.rel_ssr_per_point}")
+
+            self.check_fit()
+
+            return popt
 
 def computeDOS(data):
     """
