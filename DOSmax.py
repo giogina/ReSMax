@@ -137,6 +137,28 @@ class DOSpeak:
         y0 += self.dos_array[mid_index] - lorentzian(self.energy_array[mid_index], y0, A, Gamma, Er)
 
         return [y0, A, Gamma, Er]
+
+
+    def fit_lorentzian(self):
+        """
+        Fit the Lorentzian model to the DOS data.
+
+        Returns:
+        list: Optimized parameters [y0, A, Gamma, Er] or None if the fit failed.
+        """
+        if self.root == 14:
+            y0, A, Gamma, Er = self.initial_guesses()
+            guessed_peak = DOSpeak(self.energy_array, self.dos_array, self.gamma_array, self.root, self.approx_peak_E, self.approx_peak_rho)
+            guessed_peak.fit_E = Er
+            guessed_peak.fit_A = A
+            guessed_peak.fit_y0 = y0
+            guessed_peak.fit_Gamma = Gamma
+            plot.peak_fit(guessed_peak, f"/home/giogina/Desktop/DOSmax/stb_plot_pf/{Er}.png")
+        self.nr_fit_attempts += 1
+
+
+        return popt
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
