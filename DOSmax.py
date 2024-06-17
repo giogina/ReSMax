@@ -139,6 +139,8 @@ class DOSpeak:
         return [y0, A, Gamma, Er]
 
 
+
+
     def fit_lorentzian(self):
         """
         Fit the Lorentzian model to the DOS data.
@@ -197,6 +199,22 @@ class DOSpeak:
 
             return popt
 
+    def max_energy_window(self, energy, rho):
+
+        max_index = np.argmax(rho)
+
+        # Handle edge cases where the maximum is at the first or last position
+        if max_index == 0:
+            e_below = None
+            e_above = energy[max_index + 1]
+        elif max_index == len(energy) - 1:
+            e_below = energy[max_index - 1]
+            e_above = None
+        else:
+            e_below = energy[max_index - 1]
+            e_above = energy[max_index + 1]
+
+        return e_below, e_above
 
 def computeDOS(data):
     """
