@@ -213,6 +213,8 @@ class DOSpeak:
         else:
             e_below = energy[max_index - 1]
             e_above = energy[max_index + 1]
+        if e_below is None or e_above is None:
+            print(f"Warning: Root {self.root}, peak {self.approx_peak_E}: Maximum is at edge.")
 
         return e_below, e_above
 
