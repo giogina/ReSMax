@@ -24,6 +24,27 @@ def parse(file: str):
         return parse_dat(file)
         return None
 
+def parse_dat(file):
+    res = {"gamma": []}
+    nr_data_points = -1
+    with open(file) as f:
+        lines = f.readlines()
+    if lines is not None:
+        for root, e in enumerate(lines[0].split()[1:]):
+            res[root + 1] = []  # initiate root energy arrays
+        for line in lines:
+            vals = line.split()
+            res["gamma"].append(float(vals[0]))
+            for root, e in enumerate(vals[1:]):
+                res[root + 1].append(float(e))
+    nr_data_points = len(res["gamma"])
+    for root in res.keys():
+        if len(res[root]) == nr_data_points:
+            res[root] = np.array(res[root])
+        else:
+            print(f"Wrong number of data points for root #{root}: {len(res[root])}, should be {nr_data_points}.")
+            res.pop(root)
+    return res
 
 class DOSpeak:
     discontinuity_treatment = "fit"
