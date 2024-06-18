@@ -13,6 +13,19 @@ verbose = False
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
+float_pattern = re.compile(r'^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$')
+
+
+def parse(file: str):
+
+    if file.endswith(".ou"):
+        return parse_ou(file)
+    elif file.endswith(".dat"):
+        return parse_dat(file)
+    else:
+        return None
+
+
 class DOSpeak:
     discontinuity_treatment = "fit"
 
