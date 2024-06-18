@@ -241,6 +241,12 @@ class DOSpeak:
             return False
         return True
 
+    def energy(self):
+        if DOSpeak.discontinuity_treatment == "fit":
+            return self.fit_E
+        else:
+            return self.pointwise_energy if self.using_pointwise_energy else self.fit_E
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
