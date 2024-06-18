@@ -218,6 +218,29 @@ class DOSpeak:
 
         return e_below, e_above
 
+
+    def check_fit(self):
+        max_index = np.argmax(self.dos_array)
+        if max_index == 0:
+            self.warning = "Only right side of peak available to fit!"
+            if self.discontinuity_treatment != "fit":
+                self.warning += " Using pointwise maximum."
+                self.using_pointwise_energy = True
+            return True
+        if max_index == len(self.dos_array)-1:
+            self.warning = "Only left side of peak available to fit!"
+            if self.discontinuity_treatment != "fit":
+                self.warning += " Using pointwise maximum."
+                self.using_pointwise_energy = True
+            return True
+        if self.energy_below is not None and self.energy_below > self.fit_E:
+            self.warning = "Fit maximum not in range of pointwise maximum. Likely bad fit."
+            return False
+        if self.energy_above is not None and self.energy_above < self.fit_E:
+            self.warning = "Fit maximum not in range of pointwise maximum. Likely bad fit."
+            return False
+        return True
+
 def computeDOS(data):
     """
     Compute the Density of States (DOS) based on gamma and root data.
