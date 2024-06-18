@@ -22,7 +22,6 @@ def parse(file: str):
         return parse_ou(file)
     elif file.endswith(".dat"):
         return parse_dat(file)
-    else:
         return None
 
 
