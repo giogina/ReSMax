@@ -46,6 +46,31 @@ def parse_dat(file):
             res.pop(root)
     return res
 
+
+def parse_ou(file):
+    res = dict()
+    nr_data_points = -1
+    with open(file) as f:
+        lines = f.readlines()
+    if lines is not None:
+        data_type = "gamma"
+        data = list()
+        for line in lines:
+            if is_float(line):
+                data.append(float(line.strip()))
+            else:
+                if len(data):
+                    if data_type == "gamma":
+                        nr_data_points = len(data)
+                        res[data_type] = np.array(data.copy())
+                        data_type = 1
+                    else:
+                        if len(data) == nr_data_points:
+                            res[data_type] = np.array(data.copy())
+                        data_type += 1
+                    data = list()
+    return res
+
 class DOSpeak:
     discontinuity_treatment = "fit"
 
