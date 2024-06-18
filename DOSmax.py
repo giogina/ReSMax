@@ -71,6 +71,17 @@ def parse_ou(file):
                     data = list()
     return res
 
+def is_float(value: str):
+    return bool(float_pattern.match(value.strip()))
+
+
+def project_directory(file: str):
+    sep = '\\' if '\\' in file else '/'
+    project_dir = os.path.splitext(file)[0] + sep
+    if not os.path.exists(project_dir):### Mai### Main entry point of the script when executedn entry point of the script when executed
+        os.mkdir(project_dir)
+    return project_dir
+
 class DOSpeak:
     discontinuity_treatment = "fit"
 
