@@ -30,6 +30,18 @@ class Resonance:
         self.resonances.append(self)
         self.threshold = None
 
+
+    def add_peak(self, peak: DOSpeak):
+        self.peaks.append(peak)
+        if peak.rel_ssr_per_point < self.best_fit.rel_ssr_per_point:
+            self.best_fit = peak
+            self.energy = peak.energy()
+
+    def categorize_by_thresholds(self, thresholds):
+        above = [t for t in thresholds if t > self.energy]
+        if len(above):
+            self.threshold = min(above)
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
