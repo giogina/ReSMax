@@ -10,6 +10,13 @@ from resonance import find_resonances, Resonance
 
 verbose = False
 
+
+class Resonance:
+    """
+    Class to represent and manage a resonance and its associated peaks.
+    """
+    resonances = []
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
