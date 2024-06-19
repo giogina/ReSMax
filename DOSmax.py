@@ -17,6 +17,19 @@ class Resonance:
     """
     resonances = []
 
+    def __init__(self, peak):
+        if type(peak) is list:
+            self.peaks = peak
+            fit_qualities = [p.rel_ssr_per_point for p in peak]
+            self.best_fit = self.peaks[fit_qualities.index(min(fit_qualities))]
+            self.energy = self.best_fit.energy()
+        else:
+            self.peaks = [peak]
+            self.energy = peak.energy()
+            self.best_fit = peak
+        self.resonances.append(self)
+        self.threshold = None
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
