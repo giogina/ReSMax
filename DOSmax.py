@@ -65,7 +65,16 @@ def assign_root_peaks_to_resonances(resonances, peaks):
             min_rel_err = err * peak.rel_ssr_per_point
             closest_res = cl
             closest_peak = i
-
+    if closest_res is None:
+        for peak in peaks:
+            print(f"New resonance: Root #{peak.root} {peak.energy()}, RSSRPP = {peak.rel_ssr_per_point}")
+            Resonance(peak)  # new resonance energies found
+    else:
+        print(
+            f"Assigning: Resonance {resonances[closest_res].energy}, peak {peaks[closest_peak].energy()} of root {peaks[closest_peak].root}, RSSRPP = {peaks[closest_peak].rel_ssr_per_point}")
+        resonances[closest_res].add_peak(peaks[closest_peak])
+        assign_root_peaks_to_resonances(resonances[:closest_res], peaks[:closest_peak])
+        assign_root_peaks_to_resonances(resonances[closest_res + 1:], peaks[closest_peak + 1:])
 
 
 
