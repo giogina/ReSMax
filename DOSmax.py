@@ -42,17 +42,32 @@ class Resonance:
         if len(above):
             self.threshold = min(above)
 
-    def closest_resonance(resonances, peak: DOSpeak):
-        min_error = abs(peak.energy())
-        closest_res_i = None
-        for i, res in enumerate(resonances):
-            if peak.root not in [p.root for p in res.peaks] and abs(res.energy - peak.energy()) < min_error:
-                min_error = abs(res.energy - peak.energy())
-                closest_res_i = i
-        if closest_res_i is None:
-            return None, None
-        else:
-            return closest_res_i, min_error
+def closest_resonance(resonances, peak: DOSpeak):
+    min_error = abs(peak.energy())
+    closest_res_i = None
+    for i, res in enumerate(resonances):
+        if peak.root not in [p.root for p in res.peaks] and abs(res.energy - peak.energy()) < min_error:
+            min_error = abs(res.energy - peak.energy())
+            closest_res_i = i
+    if closest_res_i is None:
+        return None, None
+    else:
+        return closest_res_i, min_error
+
+def assign_root_peaks_to_resonances(resonances, peaks):
+
+    min_rel_err = 100
+    closest_res = None
+    closest_peak = None
+    for i, peak in enumerate(peaks):
+        cl, err = closest_resonance(resonances, peak)
+        if cl is not None and err < min_rel_err:  # select closest well-matched peak
+            min_rel_err = err * peak.rel_ssr_per_point
+            closest_res = cl
+            closest_peak = i
+
+
+
 
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
