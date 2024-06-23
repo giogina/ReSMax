@@ -120,6 +120,18 @@ def find_resonances(peaks_by_root):
                     print(f"    {p.root}, {p.energy()}")
             waiting_peaks = waiting_peaks[max_jump + 1:]
 
+def plot_DOS(data, root, file, fitted_peaks_by_root=None):
+    x_data = data["gamma"][1:-1]
+    y_data = data[root][1:-1]
+    plt.figure(figsize=(12, 8))
+    plt.scatter(x_data, y_data, edgecolor='black', facecolor='none')
+    if fitted_peaks_by_root is not None:
+        for peak in fitted_peaks_by_root[root]:
+            plt.plot([min(x_data), max(x_data)], [peak.energy(), peak.energy()], 'r-')
+    plt.savefig(file)
+    plt.close()
+    open_plot(file)
+
 
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
