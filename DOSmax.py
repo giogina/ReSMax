@@ -76,6 +76,49 @@ def assign_root_peaks_to_resonances(resonances, peaks):
         assign_root_peaks_to_resonances(resonances[:closest_res], peaks[:closest_peak])
         assign_root_peaks_to_resonances(resonances[closest_res + 1:], peaks[closest_peak + 1:])
 
+def find_resonances(peaks_by_root):
+    """
+    Find resonances by analyzing the peaks from all roots.
+
+    Parameters:
+    peaks_by_root (dict): Dictionary of peaks organized by root.
+    """
+    all_peaks = [peak for peaks in peaks_by_root.values() for peak in peaks]
+    all_peaks.sort(key=lambda p: p.energy())
+
+    waiting_peaks = []
+    for i, peak in enumerate(all_peaks):
+        waiting_peaks.append(peak)
+        if peak.root in [p.root for p in waiting_peaks[:-1]]:  # repetition found; need to draw a line somewhere between the waiting peaks
+            if verbose:
+                print(f"Repetition: {peak.root} in {[p.root for p in waiting_peaks[:-1]]}")
+            dists = [waiting_peaks[i + 1].energy() - waiting_peaks[i].energy() for i in range(0, len(waiting_peaks) - 1)]
+            max_jump = dists.index(max(dists))
+            res = Resonance(waiting_peaks[:max_jump + 1])
+            if verbose:
+                print("~~~~~", res.energy)
+                for p in waiting_peaks[:max_jump + 1]:
+                    print(f"    {p.root}, {p.energy()}")
+            waiting_peaks = waiting_peaks[max_jump + 1:]
+
+def find_resonances(peaks_by_root):
+    all_peaks = [peak for peaks in peaks_by_root.values() for peak in peaks]
+    all_peaks.sort(key=lambda p: p.energy())
+
+    waiting_peaks = []
+    for i, peak in enumerate(all_peaks):
+        waiting_peaks.append(peak)
+        if peak.root in [p.root for p in waiting_peaks[:-1]]:  # repetition found; need to draw a line somewhere between the waiting peaks
+            if verbose:
+                print(f"Repetition: {peak.root} in {[p.root for p in waiting_peaks[:-1]]}")
+            dists = [waiting_peaks[i + 1].energy() - waiting_peaks[i].energy() for i in range(0, len(waiting_peaks) - 1)]
+            max_jump = dists.index(max(dists))
+            res = Resonance(waiting_peaks[:max_jump + 1])
+            if verbose:
+                print("~~~~~", res.energy)
+                for p in waiting_peaks[:max_jump + 1]:
+                    print(f"    {p.root}, {p.energy()}")
+            waiting_peaks = waiting_peaks[max_jump + 1:]
 
 
 def lorentzian(E, y0, A, Gamma, Er):
