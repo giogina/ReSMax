@@ -132,6 +132,18 @@ def plot_DOS(data, root, file, fitted_peaks_by_root=None):
     plt.close()
     open_plot(file)
 
+def peak_fit(dos_peak, file):
+    x_data = dos_peak.energy_array
+    y_data = dos_peak.dos_array
+    x_smooth = np.linspace(min(min(x_data), dos_peak.fit_E - dos_peak.fit_Gamma/2), max(x_data), 1000) if dos_peak.discontinuity_treatment == "fit" else np.linspace(min(x_data), max(x_data), 1000)
+    y_smooth = dos_peak.get_smooth_lorentzian_curve(x_smooth)
+    plt.figure(figsize=(12, 8))
+    plt.scatter(x_data, y_data, edgecolor='black', facecolor='none')
+    plt.plot(x_smooth, y_smooth, 'r-')
+    plt.xlabel("Energy (a.u.)")
+    plt.ylabel("DOS")
+    plt.savefig(file)
+    plt.close()
 
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
