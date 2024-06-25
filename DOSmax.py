@@ -157,6 +157,12 @@ def overview(data, plot_file, from_e=None, to_e=0):
                 min_E = min(min_E, min(values))
             max_E = max(max_E, max(values))
 
+    plt.xlabel("γ")
+    plt.ylabel("Energy (a.u.)")
+    plt.ylim(bottom=min_E - 0.03, top=max_E + 0.03)
+    plt.locator_params(axis='x', nbins=20)
+    plt.locator_params(axis='y', nbins=20)
+    plt.minorticks_on()
 
     plt.savefig(plot_file)
     plt.close()
