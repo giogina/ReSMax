@@ -145,6 +145,24 @@ def peak_fit(dos_peak, file):
     plt.savefig(file)
     plt.close()
 
+def overview(data, plot_file, from_e=None, to_e=0):
+    plt.figure(figsize=(16, 12))
+    min_E = 0 if from_e is None else from_e
+    max_E = -100
+
+    for key, values in data.items():
+        if key != "gamma":
+            plt.plot(data["gamma"], values, label=key)
+            if from_e is None:
+                min_E = min(min_E, min(values))
+            max_E = max(max_E, max(values))
+
+
+    plt.savefig(plot_file)
+    plt.close()
+    open_plot(plot_file)
+    return min_E, max_E
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
