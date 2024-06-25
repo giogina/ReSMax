@@ -178,6 +178,29 @@ def open_plot(file):
     else:  # Linux and other Unix-like systems
         subprocess.call(('xdg-open', file))
 
+
+def resonance_fits(project_dir, resonances, threshold=None):
+
+    sep = '\\' if '\\' in project_dir else '/'
+    plots_dir = f"{project_dir}resonance_plots{sep}"
+    if not os.path.exists(plots_dir):
+        os.mkdir(plots_dir)
+    if threshold is None:
+        for t in set([res.threshold for res in resonances]):
+            if not os.path.exists(f"{plots_dir}{t}{sep}"):
+                os.mkdir(f"{plots_dir}{t}{sep}")
+    else:
+        if not os.path.exists(f"{plots_dir}{threshold}{sep}"):
+            os.mkdir(f"{plots_dir}{threshold}{sep}")
+    for res in resonances:
+        if threshold is None or res.threshold == threshold:
+            peak_fit(res.best_fit, f"{plots_dir}{res.threshold}{sep}{res.energy}.png")
+    if threshold is None:
+        print(f"Plots saved to {plots_dir}")
+    else:
+        print(f"Plots saved to {plots_dir}{threshold}{sep}")
+
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
