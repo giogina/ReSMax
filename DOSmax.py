@@ -169,6 +169,15 @@ def overview(data, plot_file, from_e=None, to_e=0):
     open_plot(plot_file)
     return min_E, max_E
 
+
+def open_plot(file):
+    if platform.system() == 'Windows':
+        os.startfile(file)
+    elif platform.system() == 'Darwin':  # macOS
+        subprocess.call(('open', file))
+    else:  # Linux and other Unix-like systems
+        subprocess.call(('xdg-open', file))
+
 def lorentzian(E, y0, A, Gamma, Er):
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
