@@ -2,7 +2,6 @@ import os
 from scipy import signal
 import argparse
 import numpy as np
-
 from DOSpeak import DOSpeak
 from data_parser import parse, project_directory
 import plot
@@ -10,6 +9,10 @@ from resonance import find_resonances, Resonance
 
 verbose = False
 
+def lorentzian(E, y0, A, Gamma, Er):
+    return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
+
+float_pattern = re.compile(r'^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$')
 
 class Resonance:
     """
@@ -68,7 +71,7 @@ def assign_root_peaks_to_resonances(resonances, peaks):
     if closest_res is None:
         for peak in peaks:
             print(f"New resonance: Root #{peak.root} {peak.energy()}, RSSRPP = {peak.rel_ssr_per_point}")
-            Resonance(peak)  # new resonance energies found
+            Resonance(peak)
     else:
         print(
             f"Assigning: Resonance {resonances[closest_res].energy}, peak {peaks[closest_peak].energy()} of root {peaks[closest_peak].root}, RSSRPP = {peaks[closest_peak].rel_ssr_per_point}")
@@ -108,7 +111,7 @@ def find_resonances(peaks_by_root):
     waiting_peaks = []
     for i, peak in enumerate(all_peaks):
         waiting_peaks.append(peak)
-        if peak.root in [p.root for p in waiting_peaks[:-1]]:  # repetition found; need to draw a line somewhere between the waiting peaks
+        if peak.root in [p.root for p in waiting_peaks[:-1]]:
             if verbose:
                 print(f"Repetition: {peak.root} in {[p.root for p in waiting_peaks[:-1]]}")
             dists = [waiting_peaks[i + 1].energy() - waiting_peaks[i].energy() for i in range(0, len(waiting_peaks) - 1)]
@@ -200,11 +203,6 @@ def resonance_fits(project_dir, resonances, threshold=None):
     else:
         print(f"Plots saved to {plots_dir}{threshold}{sep}")
 
-
-def lorentzian(E, y0, A, Gamma, Er):
-    return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
-
-float_pattern = re.compile(r'^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$')
 
 
 def parse(file: str):
