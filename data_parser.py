@@ -58,6 +58,15 @@ def parse_dat(file):
 
 
 def parse_ou(file):
+    """
+    Parse a .ou file and return the data in a dictionary.
+
+    Parameters:
+    file (str): The path to the .ou file.
+
+    Returns:
+    dict: Parsed data from the .ou file.
+    """
     res = dict()
     nr_data_points = -1
     with open(file) as f:
