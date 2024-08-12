@@ -2,9 +2,20 @@ import re
 import os
 import numpy as np
 
+
 float_pattern = re.compile(r'^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$')
 
+
 def parse(file: str):
+    """
+    Parse the input file based on its extension and return the data structure.
+
+    Parameters:
+    file (str): The path to the file.
+
+    Returns:
+    dict: Parsed data from the file.
+    """
     if file.endswith(".ou"):
         return parse_ou(file)
     elif file.endswith(".dat"):
