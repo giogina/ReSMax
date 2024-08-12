@@ -26,6 +26,15 @@ def parse(file: str):
 
 
 def parse_dat(file):
+    """
+    Parse a .dat file and return the data in a dictionary.
+
+    Parameters:
+    file (str): The path to the .dat file.
+
+    Returns:
+    dict: Parsed data from the .dat file.
+    """
     res = {"gamma": []}
     nr_data_points = -1
     with open(file) as f:
