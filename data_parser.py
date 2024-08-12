@@ -92,6 +92,15 @@ def parse_ou(file):
 
 
 def is_float(value: str):
+    """
+    Check if a string represents a floating-point number.
+
+    Parameters:
+    value (str): The string to check.
+
+    Returns:
+    bool: True if the string represents a float, otherwise False.
+    """
     return bool(float_pattern.match(value.strip()))
 
 
