@@ -105,6 +105,15 @@ def is_float(value: str):
 
 
 def project_directory(file: str):
+    """
+    Create or retrieve the project directory based on the file path.
+
+    Parameters:
+    file (str): The file path.
+
+    Returns:
+    str: The project directory path.
+    """
     sep = '\\' if '\\' in file else '/'
     project_dir = os.path.splitext(file)[0] + sep
     if not os.path.exists(project_dir):### Mai### Main entry point of the script when executedn entry point of the script when executed
