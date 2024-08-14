@@ -6,7 +6,12 @@ class Resonance:
     resonances = []
 
     def __init__(self, peak):
+        """
+        Initialize the Resonance object.
 
+        Parameters:
+        peak (DOSpeak or list): A DOSpeak object or a list of DOSpeak objects associated with this resonance.
+        """
         if type(peak) is list:
             self.peaks = peak
             fit_qualities = [p.rel_ssr_per_point for p in peak]
