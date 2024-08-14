@@ -37,7 +37,12 @@ class Resonance:
             self.energy = peak.energy()
 
     def categorize_by_thresholds(self, thresholds):
+        """
+        Categorize the resonance by given energy thresholds.
 
+        Parameters:
+        thresholds (list): List of threshold energy values.
+        """
         above = [t for t in thresholds if t > self.energy]
         if len(above):
             self.threshold = min(above)
