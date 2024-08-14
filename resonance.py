@@ -25,7 +25,12 @@ class Resonance:
         self.threshold = None
 
     def add_peak(self, peak: DOSpeak):
+        """
+        Add a DOSpeak to the resonance and update the best fit if necessary.
 
+        Parameters:
+        peak (DOSpeak): The DOSpeak object to add.
+        """
         self.peaks.append(peak)
         if peak.rel_ssr_per_point < self.best_fit.rel_ssr_per_point:
             self.best_fit = peak
