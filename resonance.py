@@ -49,7 +49,16 @@ class Resonance:
 
 
 def closest_resonance(resonances, peak: DOSpeak):
+    """
+    Find the closest resonance to a given DOSpeak.
 
+    Parameters:
+    resonances (list): List of existing Resonance objects.
+    peak (DOSpeak): The DOSpeak object to compare.
+
+    Returns:
+    tuple: The index of the closest resonance and the error value, or (None, None) if no close resonance is found.
+    """
     min_error = abs(peak.energy())
     closest_res_i = None
     for i, res in enumerate(resonances):
