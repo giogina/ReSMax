@@ -2,7 +2,9 @@ from DOSpeak import DOSpeak, verbose
 
 
 class Resonance:
-
+    """
+    Class to represent and manage a resonance and its associated peaks.
+    """
     resonances = []
 
     def __init__(self, peak):
