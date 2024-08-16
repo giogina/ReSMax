@@ -72,7 +72,13 @@ def closest_resonance(resonances, peak: DOSpeak):
 
 
 def assign_root_peaks_to_resonances(resonances, peaks):
+    """
+    Recursively assign root peaks to the closest resonance.
 
+    Parameters:
+    resonances (list): List of existing Resonance objects.
+    peaks (list): List of DOSpeak objects to assign.
+    """
     min_rel_err = 100
     closest_res = None
     closest_peak = None
