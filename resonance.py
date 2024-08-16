@@ -101,7 +101,12 @@ def assign_root_peaks_to_resonances(resonances, peaks):
 
 
 def find_resonances(peaks_by_root):
+    """
+    Find resonances by analyzing the peaks from all roots.
 
+    Parameters:
+    peaks_by_root (dict): Dictionary of peaks organized by root.
+    """
     all_peaks = [peak for peaks in peaks_by_root.values() for peak in peaks]
     all_peaks.sort(key=lambda p: p.energy())
 
