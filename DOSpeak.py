@@ -165,6 +165,23 @@ class DOSpeak:
             return popt
 
     def max_energy_window(self, energy, rho):
+        """
+        Determines the energy window surrounding the maximum DOS value.
+
+        The function finds the maximum value in the rho array and returns the energies
+        of the points directly to the left and right of this maximum. These surrounding
+        energy values define the range (window) within which the fitted energy (fit_E)
+        should fall to be considered "close enough" to the maximum DOS.
+
+        Parameters:
+        energy (numpy.ndarray): The array of energy values.
+        rho (numpy.ndarray): The array of DOS values corresponding to the energies.
+
+        Returns:
+        tuple: A pair (e_below, e_above) representing the energies directly to the left
+               and right of the maximum DOS value. If the maximum is at the first or last
+               position, e_below or e_above will be None, respectively.
+        """
         # Find the index of the maximum DOS value
         max_index = np.argmax(rho)
 
