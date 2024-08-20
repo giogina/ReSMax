@@ -113,6 +113,12 @@ class DOSpeak:
 
 
     def fit_lorentzian(self):
+        """
+        Fit the Lorentzian model to the DOS data.
+
+        Returns:
+        list: Optimized parameters [y0, A, Gamma, Er] or None if the fit failed.
+        """
         if self.root == 14:
             y0, A, Gamma, Er = self.initial_guesses()
             guessed_peak = DOSpeak(self.energy_array, self.dos_array, self.gamma_array, self.root, self.approx_peak_E, self.approx_peak_rho)
