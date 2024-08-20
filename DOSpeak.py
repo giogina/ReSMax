@@ -83,6 +83,9 @@ class DOSpeak:
         return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
 
     def print_fitted_parameters(self):
+        """
+        Print the fitted parameters for the DOS peak.
+        """
         print(f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
 
     def estimate_gamma(self):
