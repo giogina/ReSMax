@@ -86,6 +86,12 @@ class DOSpeak:
         print(f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
 
     def estimate_gamma(self):
+        """
+        Estimate the Gamma parameter (width of the peak) based on the DOS data.
+
+        Returns:
+        float: Estimated Gamma value.
+        """
         half_max = 0.5 * self.approx_peak_rho
         max_index = np.argmax(self.dos_array)
         dos_left = self.dos_array[:max_index]
