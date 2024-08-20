@@ -102,6 +102,12 @@ class DOSpeak:
         # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
 
     def initial_guesses(self):
+        """
+        Provide initial guesses for the fitting parameters.
+
+        Returns:
+        list: Initial guesses [y0, A, Gamma, Er] for the Lorentzian fit.
+        """
         y0 = self.approx_y0
         Gamma = self.estimate_gamma()
         A = self.approx_peak_rho * np.pi * Gamma / 2
