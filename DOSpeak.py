@@ -8,7 +8,20 @@ import plot
 
 verbose = False
 
-def lorentzian(E, y0, A, Gamma, Er)
+def lorentzian(E, y0, A, Gamma, Er):
+    """
+    Calculate the Lorentzian function.
+
+    Parameters:
+    E (float): The energy value.
+    y0 (float): The baseline offset.
+    A (float): The amplitude of the peak.
+    Gamma (float): The full width at half maximum (FWHM).
+    Er (float): The resonance energy (peak center).
+
+    Returns:
+    float: The Lorentzian function value at energy E.
+    """
     return y0 + (A / np.pi) * (Gamma / 2) / ((E - Er) ** 2 + (Gamma / 2) ** 2)
 
 
