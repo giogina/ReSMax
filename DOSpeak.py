@@ -13,9 +13,23 @@ def lorentzian(E, y0, A, Gamma, Er)
 
 
 class DOSpeak:
+    """
+    Class representing a Density of States (DOS) peak and handling the fitting of the peak
+    to a Lorentzian model.
+    """
     discontinuity_treatment = "fit"
 
     def __init__(self, energy, rho, gamma, root: int, peak_E, peak_rho):
+        """
+        Initialize the DOSpeak object.
+
+        Parameters:
+        energy (array-like): Array of energy values.
+        rho (array-like): Array of density of states values.
+        root (int): The root identifier for this DOS peak.
+        peak_E (float): The approximate energy of the peak.
+        peak_rho (float): The approximate density of states at the peak.
+        """
 
         self.root = root
         self.approx_peak_E = peak_E
