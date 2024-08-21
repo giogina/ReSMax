@@ -80,6 +80,15 @@ class DOSpeak:
 
 
     def get_smooth_lorentzian_curve(self, x_array):
+        """
+        Generate a smooth Lorentzian curve based on fitted parameters.
+
+        Parameters:
+        x_array (array-like): Array of x values over which to calculate the Lorentzian curve.
+
+        Returns:
+        array-like: Smooth Lorentzian curve values corresponding to x_array.
+        """
         return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
 
     def print_fitted_parameters(self):
