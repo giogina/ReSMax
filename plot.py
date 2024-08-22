@@ -6,6 +6,14 @@ import numpy as np
 
 
 def plot_DOS(data, root, file, fitted_peaks_by_root=None):
+    """
+    Plot the Density of States (DOS) for a specific root and save the plot.
+
+    Parameters:
+    data (dict): The parsed data containing energy and DOS arrays.
+    root (int): The root identifier for the data to plot.
+    fitted_peaks_by_root (dict, optional): Dictionary of fitted peaks by root. Defaults to None.
+    """
     x_data = data["gamma"][1:-1]
     y_data = data[root][1:-1]
     plt.figure(figsize=(12, 8))
