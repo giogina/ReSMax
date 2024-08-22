@@ -33,6 +33,18 @@ def peak_fit(dos_peak, file):
 
 
 def overview(data, plot_file, from_e=None, to_e=0):
+    """
+    Plot an overview of gamma vs energy and save the plot.
+
+    Parameters:
+    data (dict): The parsed data containing energy and gamma arrays.
+    plot_file (str): The path where the plot should be saved.
+    from_e (float, optional): Minimum energy value for the plot. Defaults to None.
+    to_e (float, optional): Maximum energy value for the plot. Defaults to 0.
+
+    Returns:
+    tuple: Minimum and maximum energy values plotted.
+    """
     plt.figure(figsize=(16, 12))
     min_E = 0 if from_e is None else from_e
     max_E = -100
