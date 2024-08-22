@@ -19,6 +19,13 @@ def plot_DOS(data, root, file, fitted_peaks_by_root=None):
 
 
 def peak_fit(dos_peak, file):
+    """
+    Plot the fitted peak for a DOSpeak object and save the plot.
+
+    Parameters:
+    dos_peak (DOSpeak): The DOSpeak object containing the fitted data.
+    file (str): The path where the plot should be saved.
+    """
     x_data = dos_peak.energy_array
     y_data = dos_peak.dos_array
     x_smooth = np.linspace(min(min(x_data), dos_peak.fit_E - dos_peak.fit_Gamma/2), max(x_data), 1000) if dos_peak.discontinuity_treatment == "fit" else np.linspace(min(x_data), max(x_data), 1000)
