@@ -58,6 +58,12 @@ def overview(data, plot_file, from_e=None, to_e=0):
 
 
 def open_plot(file):
+    """
+    Open a file using the default application based on the operating system.
+
+    Parameters:
+    file (str): The file path to open.
+    """
     if platform.system() == 'Windows':
         os.startfile(file)
     elif platform.system() == 'Darwin':  # macOS
