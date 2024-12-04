@@ -20,6 +20,8 @@ def parse(file: str):
         return parse_ou(file)
     elif file.endswith(".dat"):
         return parse_dat(file)
+    elif file.endswith(".dal"):
+        return parse_dal(file)
     else:
         print("Unrecognized data type. Accepted: .ou (gamma array followed by E(gamma, root) array for each root) or .dat (arrays of gamma, E(gamma, root) for each gamma)")
         return None
@@ -28,6 +30,7 @@ def parse(file: str):
 def parse_dat(file):
     """
     Parse a .dat file and return the data in a dictionary.
+    Data shape: Tabular, columns = [gamma, E[root 1](gamma), E[root 2](gamma), ...]
 
     Parameters:
     file (str): The path to the .dat file.
@@ -54,6 +57,49 @@ def parse_dat(file):
         else:
             print(f"Wrong number of data points for root #{root}: {len(res[root])}, should be {nr_data_points}.")
             res.pop(root)
+    return res
+
+
+def parse_dal(file):
+    """
+    Parse a .dal file and return the data in a dictionary.
+    Data shape: One number per line, first gamma, then E[root 1](gamma), E[root 2](gamma), .... Double new line, then next block.
+
+    Parameters:
+    file (str): The path to the .dal file.
+
+    Returns:
+    dict: Parsed data from the .dal file.
+    """
+    res = {"gamma": []}
+    with open(file) as f:
+        lines = f.readlines()
+    if lines is not None:
+        vals = []
+        for line in lines:
+            if len(line.strip()) == 0:
+                if len(vals):
+                    gamma = float(vals[0])
+                    res["gamma"].append(gamma)
+                    for root, e in enumerate(vals[1:]):
+                        if not root+1 in res.keys():
+                            res[root + 1] = {}  # initiate root energy dict
+                        res[root + 1][gamma] = float(e)
+                vals = []
+            else:
+                vals.append(float(line.strip()))
+
+    res["gamma"] = np.array(sorted(res["gamma"]))
+    nr_data_points = len(res["gamma"])
+    roots = res.keys()
+    for root in roots:
+        if type(root) is int:
+            root_vals = [res[root][g] for g in sorted(res[root].keys())]
+            if len(root_vals) == nr_data_points:
+                res[root] = np.array(root_vals)
+            else:
+                print(f"Wrong number of data points for root #{root}: {len(root_vals)}, should be {nr_data_points}.")
+                res.pop(root)
     return res
 
 
@@ -116,6 +162,6 @@ def project_directory(file: str):
     """
     sep = '\\' if '\\' in file else '/'
     project_dir = os.path.splitext(file)[0] + sep
-    if not os.path.exists(project_dir):### Mai### Main entry point of the script when executedn entry point of the script when executed
+    if not os.path.exists(project_dir):
         os.mkdir(project_dir)
     return project_dir
