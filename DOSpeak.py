@@ -177,7 +177,6 @@ class DOSpeak:
             guessed_peak.fit_A = A
             guessed_peak.fit_y0 = y0
             guessed_peak.fit_Gamma = Gamma
-            plot.peak_fit(guessed_peak, f"/home/giogina/Desktop/DOSmax/stb_plot_pf/{Er}.png")
         self.nr_fit_attempts += 1
         try:
             guesses = self.initial_guesses()
