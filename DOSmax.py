@@ -60,9 +60,13 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
             if lowest_populated_threshold is None:
                 lowest_populated_threshold = thresholds_above[0]
             if lowest_populated_threshold == thresholds_above[0]:
-                print(f"MBS: Root {root}, E = {min(energy_array)}")
+                min_index = np.argmin(energy_array)
+                mbs_string = f"Root {root}, E = {min(energy_array)} at gamma = {gamma_array[np.argmin(energy_array)]:.4f}"
+                if min_index < 5 or min_index > len(gamma_array)-6:
+                    mbs_string += f" [!] Minimum near {'lower' if min_index<5 else 'upper'} end of gamma range!"
+                print(f"MBS: {mbs_string}")
                 with open(result_file, 'a') as save_file:
-                    save_file.write(f"Root {root}, E = {min(energy_array)}\r\n")
+                    save_file.write(f"{mbs_string}\r\n")
         if energy_range != (None, None):
             min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
             max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
@@ -193,7 +197,7 @@ def main(file):
                         n = 1
                         thresholds = [-z * z / 2.]
                         if max_e is None or max_e >= 0:
-                            max_e = -z * z / 2. / 100  # should never happen - limit to 10 threshold values
+                            max_e = -z * z / 2. / 400  # should never happen - limit to 20 threshold values
                         while thresholds[-1] < max_e:
                             n += 1
                             thresholds.append(-z * z / 2. / n / n)
@@ -231,6 +235,7 @@ def main(file):
         except Exception as e:
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
+
     data = computeDOS(data)
     fitDOS(data, (low, high), criterion, thresholds, result_file=project_directory(file) + "resonances.txt")
 
