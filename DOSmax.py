@@ -63,7 +63,6 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
                 print(f"MBS: Root {root}, E = {min(energy_array)}")
                 with open(result_file, 'a') as save_file:
                     save_file.write(f"Root {root}, E = {min(energy_array)}\r\n")
-        print("range", energy_range)
         if energy_range != (None, None):
             min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
             max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
@@ -194,7 +193,7 @@ def main(file):
                         n = 1
                         thresholds = [-z * z / 2.]
                         if max_e is None or max_e >= 0:
-                            max_e = -z * z / 2. / 36  # should never happen - limit to 6 threshold values
+                            max_e = -z * z / 2. / 100  # should never happen - limit to 10 threshold values
                         while thresholds[-1] < max_e:
                             n += 1
                             thresholds.append(-z * z / 2. / n / n)
