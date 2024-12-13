@@ -1,5 +1,6 @@
-from DOSpeak import DOSpeak, verbose
+from DOSpeak import DOSpeak
 
+verbose = True
 
 class Resonance:
     """
@@ -118,7 +119,8 @@ def find_resonances(peaks_by_root):
         if peak.root in [p.root for p in waiting_peaks[:-1]]:  # repetition found; need to draw a line somewhere between the waiting peaks
             if verbose:
                 print(f"Repetition: {peak.root} in {[p.root for p in waiting_peaks[:-1]]}")
-            dists = [waiting_peaks[i + 1].energy() - waiting_peaks[i].energy() for i in range(0, len(waiting_peaks) - 1)]
+            rep_index = [p.root for p in waiting_peaks[:-1]].index(peak.root)
+            dists = [waiting_peaks[i + 1].energy() - waiting_peaks[i].energy() if i >= rep_index else 0 for i in range(0, len(waiting_peaks) - 1)]  # 0 before rep index ensures cut happens after.
             max_jump = dists.index(max(dists))
             res = Resonance(waiting_peaks[:max_jump + 1])
             if verbose:
@@ -126,4 +128,3 @@ def find_resonances(peaks_by_root):
                 for p in waiting_peaks[:max_jump + 1]:
                     print(f"    {p.root}, {p.energy()}")
             waiting_peaks = waiting_peaks[max_jump + 1:]
-
