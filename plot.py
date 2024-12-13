@@ -47,7 +47,7 @@ def peak_fit(dos_peak, file):
     plt.close()
 
 
-def overview(data, plot_file, from_e=None, to_e=0):
+def overview(data, plot_file, from_e=None, to_e=None):
     """
     Plot an overview of gamma vs energy and save the plot.
 
@@ -62,14 +62,15 @@ def overview(data, plot_file, from_e=None, to_e=0):
     """
     plt.figure(figsize=(16, 12))
     min_E = 0 if from_e is None else from_e
-    max_E = -100
+    max_E = -100 if to_e is None else to_e
 
     for key, values in data.items():
         if key != "gamma":
             plt.plot(data["gamma"], values, label=key)
             if from_e is None:
                 min_E = min(min_E, min(values))
-            max_E = max(max_E, max(values))
+            if to_e is None:
+                max_E = max(max_E, max(values))
 
     plt.xlabel("γ")
     plt.ylabel("Energy (a.u.)")
