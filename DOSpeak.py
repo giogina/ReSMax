@@ -1,7 +1,7 @@
 
 import math
 import numpy as np
-from numpy.ma.core import indices
+import warnings
 from scipy import optimize
 
 import plot
@@ -180,11 +180,13 @@ class DOSpeak:
         self.nr_fit_attempts += 1
         try:
             guesses = self.initial_guesses()
-            if self.nr_fit_attempts == 1:
-                cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses)
-            else:
-                cv = optimize.curve_fit(lorentzian, np.insert(self.energy_array, 0, self.approx_peak_E-5*guesses[2]),
-                                        np.insert(self.dos_array, 0, guesses[0]), p0=guesses)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", optimize.OptimizeWarning)
+                if self.nr_fit_attempts == 1:
+                    cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses)
+                else:
+                    cv = optimize.curve_fit(lorentzian, np.insert(self.energy_array, 0, self.approx_peak_E-5*guesses[2]),
+                                            np.insert(self.dos_array, 0, guesses[0]), p0=guesses)
         except Exception as e:
             if verbose:
                 print(f"Root {self.root}: Fit failed for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
@@ -283,3 +285,4 @@ class DOSpeak:
             return self.fit_E
         else:
             return self.pointwise_energy if self.using_pointwise_energy else self.fit_E
+            
