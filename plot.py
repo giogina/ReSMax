@@ -3,6 +3,7 @@ import subprocess
 import platform
 import matplotlib.pyplot as plt
 import numpy as np
+from fontTools.afmLib import writelines
 
 
 def plot_DOS(data, root, file, fitted_peaks_by_root=None):
@@ -45,8 +46,11 @@ def peak_fit(dos_peak, file):
     plt.ylabel("DOS")
     plt.savefig(file)
     plt.close()
-
-
+    with open(f"{file[:-5]}.txt",'w') as plot_data_file:
+        plot_data_file.write(np.array2string(x_data, separator=" ", max_line_width=np.inf) + "\r\n")
+        plot_data_file.write(np.array2string(y_data, separator=" ", max_line_width=np.inf) + "\r\n")
+        plot_data_file.write(np.array2string(x_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
+        plot_data_file.write(np.array2string(y_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
 def overview(data, plot_file, from_e=None, to_e=None):
     """
     Plot an overview of gamma vs energy and save the plot.
