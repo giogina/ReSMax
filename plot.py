@@ -3,7 +3,8 @@ import subprocess
 import platform
 import matplotlib.pyplot as plt
 import numpy as np
-from fontTools.afmLib import writelines
+from matplotlib.colors import Normalize
+from matplotlib.ticker import ScalarFormatter
 
 
 def plot_DOS(data, root, file, fitted_peaks_by_root=None):
@@ -51,6 +52,7 @@ def peak_fit(dos_peak, file):
         plot_data_file.write(np.array2string(y_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(x_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(y_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
+
 def overview(data, plot_file, from_e=None, to_e=None):
     """
     Plot an overview of gamma vs energy and save the plot.
@@ -131,3 +133,65 @@ def resonance_fits(project_dir, resonances, threshold=None):
         print(f"Plots saved to {plots_dir}")
     else:
         print(f"Plots saved to {plots_dir}{threshold}{sep}")
+
+
+def resonance_summary_grid(project_dir, resonances):
+    """
+    Create a grid plot for each resonance, showing all peaks associated with it.
+
+    Parameters:
+    project_dir (str): The project directory to save the summary plots.
+    resonances (list): List of Resonance objects containing associated peaks.
+    """
+    sep = '\\' if '\\' in project_dir else '/'
+    summary_dir = f"{project_dir}resonance_plot_grids{sep}"
+    if not os.path.exists(summary_dir):
+        os.mkdir(summary_dir)
+
+    norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
+    cmap = plt.cm.get_cmap("RdYlGn")  # Gradient from red to green
+
+    for res in resonances:
+        fig, axs = plt.subplots(nrows=(len(res.peaks) // 3) + 1, ncols=3, figsize=(18, 6 * ((len(res.peaks) // 3) + 1)))
+        axs = axs.flatten()
+        for idx, peak in enumerate(res.peaks):
+            ax = axs[idx]
+            x_data = peak.energy_array
+            y_data = peak.dos_array
+            x_smooth = np.linspace(min(x_data), max(x_data), 1000)
+            y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
+
+            # Determine fit curve color based on log(rel_SSR_per_point)
+            log_rel_ssr = -np.log10(peak.rel_ssr_per_point)
+            fit_color = cmap(norm(log_rel_ssr))
+
+            # Data points color: red if warning exists, otherwise black
+            points_color = 'red' if peak.warning else 'black'
+
+            # Plotting
+            ax.scatter(x_data, y_data, edgecolor=points_color, facecolor='white')
+            ax.plot(x_smooth, y_smooth, color=fit_color)
+            ax.set_title(f"Root {peak.root}, E_fit = {peak.fit_E:.5f}")
+            ax.set_xlabel("Energy (a.u.)")
+            ax.set_ylabel("DOS")
+            ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            ax.ticklabel_format(style='sci', axis='x',
+                                scilimits=(-2, 2))  # Use scientific notation if numbers are too large/small
+
+            # Annotate fit parameters and warnings
+            fit_text = (f"E = {peak.fit_E:.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
+                        f"A = {peak.fit_A:.6f}\ny0 = {peak.fit_y0:.6f}\n"
+                        f"Rel SSR = {peak.rel_ssr_per_point:.3e}")
+            # if peak.warning:
+            #     fit_text += f"\nWarning: {peak.warning}"
+            bbox_color = "green" if peak == res.best_fit else "white"
+            ax.text(0.30, 0.05, fit_text, transform=ax.transAxes, fontsize=10,
+                    verticalalignment='bottom', bbox=dict(boxstyle="round", facecolor="white", edgecolor=bbox_color, alpha=0.5))
+
+        # Hide unused subplots
+        for ax in axs[len(res.peaks):]:
+            ax.axis('off')
+
+        plt.tight_layout()
+        plt.savefig(f"{summary_dir}{res.energy:.5f}.png")
+        plt.close()
