@@ -27,6 +27,10 @@ class Resonance:
         self.resonances.append(self)
         self.threshold = None
 
+    @classmethod
+    def get_resonances_for_threshold(cls, t:float=None):
+        return [res for res in cls.resonances if res.threshold == t]
+
     def add_peak(self, peak: DOSpeak):
         """
         Add a DOSpeak to the resonance and update the best fit if necessary.
