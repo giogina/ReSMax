@@ -273,10 +273,12 @@ def main(file):
         action = input(input_string)
         if action == 'p':
             plot.resonance_fits(project_directory(file), Resonance.resonances)
+            plot.resonance_summary_grid(project_directory(file), Resonance.resonances)
             break
         elif action in [f'p{i}' for i, t in enumerate(thresholds)]:
             i = int(action[1:])
             plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
+            plot.resonance_summary_grid(project_directory(file), Resonance.get_resonances_for_threshold(thresholds[i]))
         elif action == 'x':
             break
         else:
