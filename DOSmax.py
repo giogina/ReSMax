@@ -2,6 +2,7 @@ import os
 from scipy import signal
 import argparse
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 
 from DOSpeak import DOSpeak
 from data_parser import parse, project_directory
@@ -161,9 +162,84 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
 
     print(f"\nResults have been written to {result_file}.")
 
-    # TODO: better treatment of pointwise maximum energy - e.g. the figures are still named using fit_E I think? Also, show whole range (including dropped points) of fit.
-    #  Also, why is first [19] not included in following resonance? Use other E for that?
-    #  Give a slightly larger allowance for the fit_check.
+def reassign_roots(data):
+    """
+    Reassign roots based on minimizing deviations from predicted positions, accounting for non-uniform gamma spacing.
+
+    Parameters:
+    data (dict): Parsed data containing gamma and root arrays.
+
+    Returns:
+    dict: Updated data with reassigned roots.
+    """
+    gamma = data["gamma"]
+    roots = [key for key in data.keys() if key != "gamma"]
+    num_roots = len(roots)
+    energies = np.array([data[root] for root in roots]).T  # Transpose to shape (γ, roots)
+
+    # Initialize reassigned energies
+    reassigned_energies = np.zeros_like(energies)
+
+    # Assign initial roots based on sorted energies
+    reassigned_energies[0] = np.sort(energies[0])
+    reassigned_energies[1] = np.sort(energies[1])
+
+    # Iterate over the γ values
+    for i in range(2, len(gamma)):
+        # Calculate delta_gamma for the current step
+        delta_gamma_prev = gamma[i] - gamma[i - 1]
+        delta_gamma_last = (gamma[i - 1] - gamma[i - 2]) if i > 1 else None
+
+        # Predict positions based on the slope of the last two points
+        predicted_positions = np.zeros(num_roots)
+        for j in range(num_roots):
+            if i == 1:
+                # Use the slope from the last point for prediction in the first iteration
+                predicted_positions[j] = reassigned_energies[i - 1, j]
+            else:
+                # Scale the slope by the ratio of delta_gamma values
+                slope = (reassigned_energies[i - 1, j] - reassigned_energies[i - 2, j]) / delta_gamma_last
+                predicted_positions[j] = reassigned_energies[i - 1, j] + slope * delta_gamma_prev
+
+        # Assign points to roots to minimize total deviation
+        # if 0.55<gamma[i]<0.60:
+        #     # print(f"Step {i}: Predicted Positions vs energies")
+        #     for l in range(49, 51):
+        #         if -0.31<energies[i][l]<-0.29:
+        #             print(gamma[i], l, energies[i-2][l], energies[i-1][l], energies[i][l], predicted_positions[l])
+        #             # 0.5767890554752293 49 -0.3061434109549546 -0.3018987381105364 -0.3002821887709999 -0.2977307490255804
+        #             # 0.5767890554752293 50 -0.3001826249945057 -0.2994126360820046 -0.2961801200207488 -0.29865655769846977
+
+        cost_matrix = np.abs(energies[i][:, None] - predicted_positions[None, :])
+        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+        if 0.576<gamma[i]<0.577:
+            print(f"  cost_matrix[49, 49] = {cost_matrix[49, 49]}")
+            print(f"  cost_matrix[49, 50] = {cost_matrix[49, 50]}")
+            print(f"  cost_matrix[50, 49] = {cost_matrix[50, 49]}")
+            print(f"  cost_matrix[50, 50] = {cost_matrix[50, 50]}")
+            print(col_ind)
+        #print(f"Step {i}: Cost Matrix:\n{cost_matrix}")
+        col_switches = [(int(col_ind[ni-1]), int(n)) for ni, n in enumerate(col_ind) if ni>0 and n<col_ind[ni-1]]
+        # if (len(col_switches)):
+        #     print("Col ", i, col_switches)
+
+        # Reassign energies for the current γ
+        reassigned_energies[i] = energies[i][col_ind]
+        if i<100:
+            print(f"Original energies[{i}]   = {energies[i][48:52]}")
+            print(f"Reassigned energies[{i}] = {energies[i][col_ind][48:52]}")
+
+        if 0.576 < gamma[i] < 0.577:
+            print(energies[i][49], energies[i][50])
+            print(reassigned_energies[49], reassigned_energies[50])
+
+    # Update data with reassigned roots
+    reassigned_data = {"gamma": gamma}
+    for j, root in enumerate(roots):
+        reassigned_data[f"root_{j+1}"] = reassigned_energies[:, j]
+
+    return reassigned_data
+
 
 
 def main(file):
@@ -175,6 +251,7 @@ def main(file):
     """
     print(f"Processing file: {file}")
     data = parse(file)
+    # data = reassign_roots(data)
     action = "o"  # overview plot
     low = None
     high = 0
