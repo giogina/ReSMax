@@ -1,6 +1,9 @@
+import numpy as np
+from scipy import signal
+
 from DOSpeak import DOSpeak
 
-verbose = True
+verbose = False
 
 class Resonance:
     """
@@ -24,6 +27,7 @@ class Resonance:
             self.peaks = [peak]
             self.energy = peak.energy()
             self.best_fit = peak
+        self.index = len(self.resonances)
         self.resonances.append(self)
         self.threshold = None
 
@@ -53,6 +57,60 @@ class Resonance:
         above = [t for t in thresholds if t > self.energy]
         if len(above):
             self.threshold = min(above)
+
+
+def energy_clustering(data, e_min, e_max, resolution):
+    """
+    Detect energy clustering by creating a weighted scan across the energy range.
+
+    Parameters:
+    data (dict): Parsed data dictionary containing "gamma", "rho_{root}" arrays, and others.
+    e_min (float): Minimum energy value for the scan.
+    e_max (float): Maximum energy value for the scan.
+    resolution (float): Energy resolution (step size) for the scan.
+
+    Returns:
+    tuple: (energy_grid, clustering_array) where:
+        - energy_grid: The array of energy values used for the scan.
+        - clustering_array: The weighted clustering values for each energy bin.
+    """
+    # Create an energy grid spanning the range [e_min, e_max] with the given resolution
+    energy_grid = np.arange(e_min, e_max, resolution)
+    clustering_array = np.zeros_like(energy_grid)
+
+    kernel_half_width = 9  # Number of bins a point influences
+    kernel = np.exp(-0.5 * (np.arange(-kernel_half_width, kernel_half_width+1) / kernel_half_width * 3) ** 2)  # Gaussian kernel
+    kernel /= kernel.sum()
+
+    for key in data.keys():
+        if isinstance(key, str) and key.startswith("rho_"):  # Identify DOS arrays
+            rho = data[key]
+            energy = data[int(key[4:])]  # Corresponding energy array for the root
+            log_dos = np.log10(rho+1)
+
+            # Loop over all data points and distribute their weights to the energy grid
+            for e, log_rho in zip(energy[1:-1], log_dos):  # Skip endpoints
+                # Find the closest grid index
+                idx = int((e - e_min) / resolution)
+                if idx < 0 or idx >= len(energy_grid):
+                    continue  # Skip points outside the range
+
+                # Distribute weights across kernel_width bins
+                for offset, weight in enumerate(kernel):
+                    bin_idx = idx + offset - kernel_half_width
+                    if 0 <= bin_idx < len(clustering_array):
+                        clustering_array[bin_idx] += log_rho * weight
+
+    peak_indices, _ = signal.find_peaks(
+        clustering_array,
+        # width=2 * resolution / (energy_grid[1] - energy_grid[0]),  # Min peak width in bins
+        height=1
+    )
+    # valid_peak_indices = filter_peaks_by_relative_prominence(clustering_array, peak_indices, prominence_threshold=0.3)
+    valid_peak_indices = peak_indices
+
+    peak_energies = energy_grid[valid_peak_indices] if len(valid_peak_indices) else []
+    return energy_grid, clustering_array, peak_energies
 
 
 def closest_resonance(resonances, peak: DOSpeak):
