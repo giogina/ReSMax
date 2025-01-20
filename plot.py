@@ -226,7 +226,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     resonances (list): List of Resonance objects containing peaks.
     output_file (str): Path to save the generated plot.
     """
-    plt.figure(figsize=(240, 16))  # Make the plot wide for better energy resolution
+    plt.figure(figsize=(240, 8))  # Make the plot wide for better energy resolution
 
     colors = ["blue", "purple", "red", "yellow", "green", "cyan"]
     num_colors = len(colors)
@@ -255,9 +255,9 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     for key in data.keys():
         if type(key) is str and key.startswith("rho_"):  # Identify DOS arrays
             root = int(key[4:])
-            indices = data[f"cleaned_{root}"][2:-2]  # todo: peaks are skewed now; this seems wrong?
-            rho = data[key][indices]
-            energy = data[root][1:-1][indices]  # Corresponding energy array for the root
+            # indices = data[f"cleaned_{root}"][2:-2]  # todo: peaks are skewed now; this seems wrong?
+            rho = data[key]#[indices]
+            energy = data[root][1:-1]#[indices]  # Corresponding energy array for the root
             color = get_root_color(root)
             plt.scatter(
                 energy,
@@ -286,6 +286,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     # emin, emax = -0.53, -0.50
     emin, emax = -1, 0
     plt.xlim(emin, emax)
+    plt.ylim(-0.2, 5)
     tick_positions = np.linspace(emin, emax, int(1/0.01))
     plt.xticks(tick_positions)
     plt.title("All Fitted Peaks: DOS vs Energy")
