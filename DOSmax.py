@@ -414,6 +414,7 @@ def main(file):
     data = computeDOS(data)
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
+    plot.plot_all_resonance_peaks(data, Resonance.resonances,  project_directory(file)[:-1]+"_dos_panorama.png")
     print(f"Plotting resonance overviews to {project_directory(file)}resonance_plots...")
     # current_threshold = thresholds[0]
     # for res in Resonance.resonances:
