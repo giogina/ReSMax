@@ -1,8 +1,9 @@
-import os
+import re
+
 from scipy import signal
 import argparse
 import numpy as np
-from scipy.optimize import linear_sum_assignment
+from scipy.signal import argrelextrema
 
 from DOSpeak import DOSpeak
 from data_parser import parse, project_directory
@@ -10,6 +11,7 @@ import plot
 from resonance import find_resonances, Resonance
 
 verbose = False
+
 
 def computeDOS(data):
     """
@@ -25,27 +27,28 @@ def computeDOS(data):
     roots.remove("gamma")
     num = data["gamma"][2:] - data["gamma"][:-2]  # This seems unnecessarily inaccurate. Why not i to i+1, with E in the middle?
     for root in roots:
-        den = (data[root][2:] - data[root][:-2])
-        data[f"rho_{root}"] = np.abs(num / den) if 0 not in list(den) else np.zeros(len(num))
+        if type(root) is int:
+            den = np.abs(data[root][2:] - data[root][:-2])
+            data[f"rho_{root}"] = np.abs(num / den) if 0 not in list(den) else np.zeros(len(num))
     return data
 
 
-def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
+def fitDOS(data, energy_range, thresholds, project_dir):
     """
     Fit DOS data using Lorentzian models and find resonances.
 
     Parameters:
     data (dict): Parsed data containing energy and DOS arrays.
     energy_range (tuple): Tuple specifying the energy range to consider for fitting.
-    fit_criterion (str): Criterion for fitting ('ssr' or 'rspp').
     thresholds (list): List of energy thresholds for categorizing resonances.
-    result_file (str): Path to the file where results will be written.
+    project_dir (str): Path to the project directory
     """
+    result_file = project_dir + "resonances.txt"
     data_keys = list(data.keys())
     data_keys = [k for k in data_keys if type(k) is str and k.startswith("rho_")]
-    data_keys.sort(
-        key=lambda k: min(data[int(k[4:])]))  # It seems DOS maxima are best sampled as they come into view bottom->top.
+    data_keys.sort(key=lambda k: min(data[int(k[4:])]))  # It seems DOS maxima are best sampled as they come into view bottom->top.
     fitted_peaks_by_root = {}
+    fitted_half_peaks_by_root = {}
     lowest_populated_threshold = None
     with open(result_file, 'w') as save_file:
         save_file.write("MBS:\r\n")
@@ -56,6 +59,7 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
         gamma_array = data["gamma"][1:-1]
         dos_array = data[key]
         fitted_peaks_by_root[root] = []
+        fitted_half_peaks_by_root[root] = []
         thresholds_above = [t for t in thresholds if min(energy_array) < t]
         if len(thresholds_above):
             if lowest_populated_threshold is None:
@@ -72,7 +76,7 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
             min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
             max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
             local_mins = signal.find_peaks(-energy_array)
-            min_i = 0 if len(local_mins[0]) == 0 else max(local_mins[0])
+            min_i = 0 if len(local_mins[0]) == 0 else max(local_mins[0])+3
             included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and min_i <= i]
             energy_array = np.array([energy_array[i] for i in included_indices])
             gamma_array = np.array([gamma_array[i] for i in included_indices])
@@ -104,15 +108,17 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
                         gammas = gamma_array[v:v2]
                         rhos = dos_array[v:v2]
                         dp = DOSpeak(energies, rhos, gammas, root, peak_E, peak_rho)
-                        fitted_paras = dp.fit_lorentzian()
-                        if fitted_paras is not None and dp.energy() > lowest_populated_threshold:
+                        dp.fit_lorentzian()  # todo: use the half slope idea to make better initial guesses
+                        if dp.fit_E is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
                             fitted_peaks_by_root[root].append(dp)
 
     find_resonances(fitted_peaks_by_root)
     for res in Resonance.resonances:
         res.categorize_by_thresholds(thresholds)
-    Resonance.resonances.sort(key=lambda res: res.energy)
-
+    Resonance.resonances.sort(key=lambda r: r.energy)
+                
+                
+def print_result_file(result_file):
     current_threshold = None
     with open(result_file, 'a') as save_file:
         for res in Resonance.resonances:
@@ -121,20 +127,21 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
                 print(f"\nResonances found below threshold E = {current_threshold}:")
                 save_file.write(f"\r\nResonances found below threshold {current_threshold}:\r\n")
                 save_file.write(f"Energy             Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
-            print(f"{res.energy}, Root {res.best_fit.root}, SSR {res.best_fit.ssr}, Rel. SSR per point {res.best_fit.rel_ssr_per_point}, gamma = {res.best_fit.fit_gamma}, Gamma = {res.best_fit.fit_Gamma}, A = {res.best_fit.fit_A}, y0 = {res.best_fit.fit_y0}, Other roots = {[p.root for p in res.peaks]}")
-            save_file.write(
-                f"{res.energy:.15f}".ljust(18, '0') + "\t" +
-                f"{res.best_fit.root}\t" +
-                f"{res.best_fit.fit_gamma:.15f}".ljust(18, '0') + "\t" +
-                f"{res.best_fit.ssr:.15f}".ljust(18, '0')[:18] + "\t" +
-                f"{res.best_fit.rel_ssr_per_point:.15f}".ljust(18, '0') + "\t" +
-                f"{res.best_fit.fit_Gamma:.15f}".ljust(18, '0') + "\t" +
-                f"{res.best_fit.fit_A:.15f}".ljust(18, '0') + "\t" +
-                f"{res.best_fit.fit_y0:.15f}".ljust(18, ' ') + "\t" +
-                f"{[p.root for p in res.peaks]} \t" +
-                f"{'[!] '+res.best_fit.warning if res.best_fit.warning is not None else ''}"
-                +"\r\n"
-            )
+            if res.best_fit is not None:
+                print(f"{res.energy}, Root {res.best_fit.root}, SSR {res.best_fit.ssr}, Rel. SSR per point {res.best_fit.rel_ssr_per_point}, gamma = {res.best_fit.fit_gamma}, Gamma = {res.best_fit.fit_Gamma}, A = {res.best_fit.fit_A}, y0 = {res.best_fit.fit_y0}, Other roots = {[p.root for p in res.peaks]}")
+                save_file.write(
+                    f"{res.energy:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.root}\t" +
+                    f"{res.best_fit.fit_gamma:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.ssr:.15f}".ljust(18, '0')[:18] + "\t" +
+                    f"{res.best_fit.rel_ssr_per_point:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.fit_Gamma:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.fit_A:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.fit_y0:.15f}".ljust(18, ' ') + "\t" +
+                    f"{[p.root for p in res.peaks]} \t" +
+                    f"{'[!] '+res.best_fit.warning if res.best_fit.warning is not None else ''}"
+                    +"\r\n"
+                )
 
         save_file.write("\r\n\r\n\r\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n\r\n  Detailed data on all DOS peak fits:  \r\n\r\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n\r\n")
         save_file.write(f"Threshold     \t\t Resonance         \t Energy (pointwise)\t Energy (fit)\t   Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0\r\n")
@@ -145,7 +152,7 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
                 current_threshold = res.threshold
             for peak in sorted(res.peaks, key=lambda p1: p1.root):
                 save_file.write( " " +
-                    f"{current_threshold:.3f}".ljust(10, ' ') + "\t" + (" x" if res.best_fit.root == peak.root else "  ") + "    \t" +
+                    f"{current_threshold:.3f}".ljust(10, ' ') + "\t" + (" x" if res.best_fit is not None and res.best_fit.root == peak.root else "  ") + "    \t" +
                     f"{res.energy:.15f}".ljust(18, '0') + "\t" +
                     f"{peak.pointwise_energy:.15f}".ljust(18, '0') + "\t" +
                     f"{peak.fit_E:.15f}".ljust(18, '0') + "\t" +
@@ -162,84 +169,149 @@ def fitDOS(data, energy_range, fit_criterion, thresholds, result_file):
 
     print(f"\nResults have been written to {result_file}.")
 
-def reassign_roots(data):
+
+def sliding_window_average(data, e_min, e_max, window_size):
     """
-    Reassign roots based on minimizing deviations from predicted positions, accounting for non-uniform gamma spacing.
+    Compute an averaged curve from a sliding window of energy-consecutive points using numpy.
 
     Parameters:
-    data (dict): Parsed data containing gamma and root arrays.
+    data (dict): Parsed data dictionary containing "gamma", "rho_{root}" arrays, and others.
+    e_min (float): Minimum energy value to include in the analysis.
+    e_max (float): Maximum energy value to include in the analysis.
+    window_size (int): Number of consecutive points in each sliding window.
 
     Returns:
-    dict: Updated data with reassigned roots.
+    tuple: (averaged_energy, averaged_dos) where:
+        - averaged_energy is the array of averaged energy values.
+        - averaged_dos is the corresponding array of averaged DOS values.
     """
-    gamma = data["gamma"]
-    roots = [key for key in data.keys() if key != "gamma"]
-    num_roots = len(roots)
-    energies = np.array([data[root] for root in roots]).T  # Transpose to shape (γ, roots)
+    # Collect energy and DOS points from the data
+    points = []
+    for key in data.keys():
+        if isinstance(key, str) and key.startswith("rho_"):
+            rho = data[key]
+            energy = data[int(key[4:])]
+            points.extend(zip(energy[1:-1], np.log10(rho)))  # Skip endpoints
 
-    # Initialize reassigned energies
-    reassigned_energies = np.zeros_like(energies)
+    points = np.array(points)
 
-    # Assign initial roots based on sorted energies
-    reassigned_energies[0] = np.sort(energies[0])
-    reassigned_energies[1] = np.sort(energies[1])
+    # Filter points within the energy range
+    points = points[(points[:, 0] >= e_min) & (points[:, 0] <= e_max)]
 
-    # Iterate over the γ values
-    for i in range(2, len(gamma)):
-        # Calculate delta_gamma for the current step
-        delta_gamma_prev = gamma[i] - gamma[i - 1]
-        delta_gamma_last = (gamma[i - 1] - gamma[i - 2]) if i > 1 else None
+    # Sort points by increasing energy
+    points = points[np.argsort(points[:, 0])]
 
-        # Predict positions based on the slope of the last two points
-        predicted_positions = np.zeros(num_roots)
-        for j in range(num_roots):
-            if i == 1:
-                # Use the slope from the last point for prediction in the first iteration
-                predicted_positions[j] = reassigned_energies[i - 1, j]
-            else:
-                # Scale the slope by the ratio of delta_gamma values
-                slope = (reassigned_energies[i - 1, j] - reassigned_energies[i - 2, j]) / delta_gamma_last
-                predicted_positions[j] = reassigned_energies[i - 1, j] + slope * delta_gamma_prev
+    # Apply a sliding window using numpy's stride tricks
+    energy = points[:, 0]
+    dos = points[:, 1]
 
-        # Assign points to roots to minimize total deviation
-        # if 0.55<gamma[i]<0.60:
-        #     # print(f"Step {i}: Predicted Positions vs energies")
-        #     for l in range(49, 51):
-        #         if -0.31<energies[i][l]<-0.29:
-        #             print(gamma[i], l, energies[i-2][l], energies[i-1][l], energies[i][l], predicted_positions[l])
-        #             # 0.5767890554752293 49 -0.3061434109549546 -0.3018987381105364 -0.3002821887709999 -0.2977307490255804
-        #             # 0.5767890554752293 50 -0.3001826249945057 -0.2994126360820046 -0.2961801200207488 -0.29865655769846977
+    shape = (energy.size - window_size + 1, window_size)
+    strides = (energy.strides[0], energy.strides[0])
 
-        cost_matrix = np.abs(energies[i][:, None] - predicted_positions[None, :])
-        row_ind, col_ind = linear_sum_assignment(cost_matrix)
-        if 0.576<gamma[i]<0.577:
-            print(f"  cost_matrix[49, 49] = {cost_matrix[49, 49]}")
-            print(f"  cost_matrix[49, 50] = {cost_matrix[49, 50]}")
-            print(f"  cost_matrix[50, 49] = {cost_matrix[50, 49]}")
-            print(f"  cost_matrix[50, 50] = {cost_matrix[50, 50]}")
-            print(col_ind)
-        #print(f"Step {i}: Cost Matrix:\n{cost_matrix}")
-        col_switches = [(int(col_ind[ni-1]), int(n)) for ni, n in enumerate(col_ind) if ni>0 and n<col_ind[ni-1]]
-        # if (len(col_switches)):
-        #     print("Col ", i, col_switches)
+    energy_windows = np.lib.stride_tricks.as_strided(energy, shape=shape, strides=strides)
+    dos_windows = np.lib.stride_tricks.as_strided(dos, shape=shape, strides=strides)
 
-        # Reassign energies for the current γ
-        reassigned_energies[i] = energies[i][col_ind]
-        if i<100:
-            print(f"Original energies[{i}]   = {energies[i][48:52]}")
-            print(f"Reassigned energies[{i}] = {energies[i][col_ind][48:52]}")
+    # Compute averages for each window
+    averaged_energy = energy_windows.mean(axis=1)
+    averaged_dos = dos_windows.mean(axis=1)
 
-        if 0.576 < gamma[i] < 0.577:
-            print(energies[i][49], energies[i][50])
-            print(reassigned_energies[49], reassigned_energies[50])
+    return averaged_energy, averaged_dos, []
 
-    # Update data with reassigned roots
-    reassigned_data = {"gamma": gamma}
-    for j, root in enumerate(roots):
-        reassigned_data[f"root_{j+1}"] = reassigned_energies[:, j]
 
-    return reassigned_data
+def filter_peaks_by_relative_prominence(clustering_array, peak_indices, prominence_threshold=0.3):
+    """
+    Filter peaks by relative prominence, processing from lowest to highest height.
 
+    Parameters:
+    clustering_array (array): The array of clustering weights.
+    peak_indices (array): Indices of detected peaks in the clustering array.
+    prominence_threshold (float): Minimum relative prominence required for a peak.
+
+    Returns:
+    array: Filtered peak indices that pass the relative prominence check.
+    """
+    # Sort peaks by their height in ascending order
+    peak_heights = clustering_array[peak_indices]
+    sorted_peak_indices = [idx for _, idx in sorted(zip(peak_heights, peak_indices))]
+
+    # Convert to a set for efficient removal
+    valid_peaks = set(sorted_peak_indices)
+
+    for current_peak in sorted_peak_indices:
+        if current_peak not in valid_peaks:
+            continue  # Skip peaks already removed
+
+        left_min = None
+        for i in range(current_peak - 1, -1, -1):  # Search left
+            if i in valid_peaks and i < current_peak:
+                break  # Stop at the nearest valid left peak
+            if left_min is None or clustering_array[i] < left_min:
+                left_min = clustering_array[i]
+
+        right_min = None
+        for i in range(current_peak + 1, len(clustering_array)):  # Search right
+            if i in valid_peaks and i > current_peak:
+                break  # Stop at the nearest valid right peak
+            if right_min is None or clustering_array[i] < right_min:
+                right_min = clustering_array[i]
+
+        # Calculate the prominence relative to the larger adjacent minimum
+        if left_min is not None and right_min is not None:
+            min_adjacent = max(left_min, right_min)
+        elif left_min is not None:
+            min_adjacent = left_min
+        elif right_min is not None:
+            min_adjacent = right_min
+        else:
+            min_adjacent = 0  # Shouldn't happen; safeguard
+
+        relative_prominence = (clustering_array[current_peak] - min_adjacent) / clustering_array[current_peak]
+
+        if relative_prominence < prominence_threshold:
+            valid_peaks.remove(current_peak)
+
+    return np.array(sorted(valid_peaks))
+
+
+def cleanup(data):
+    """
+    Clean up the front of the data for each root by removing points before the first local minimum
+    in the energy vs. gamma relationship.
+
+    Parameters:
+    data (dict): Parsed data dictionary containing "gamma", "{rootnumber}" arrays, and others.
+
+    Returns:
+    dict: Updated data dictionary with new keys "cleaned_{rootnumber}" containing valid indices.
+    """
+
+    cleaned_data = data.copy()
+    for key in data.keys():
+        if isinstance(key, int):
+            energy = cleaned_data[key]
+            cut_index = last_local_minimum(energy)
+            valid_indices = list(range(cut_index, len(energy)))
+            cleaned_data[f"cleaned_{key}"] = np.array(valid_indices)
+    return cleaned_data
+
+
+def last_local_minimum(energy):
+    local_minima = argrelextrema(energy, np.less)[0]
+    if len(local_minima) > 0:
+        highest_local_min_index = local_minima[-1]
+        local_min_energy = energy[highest_local_min_index]
+        li, prev_lower_energy = next(
+            ((i, e) for i, e in reversed(list(enumerate(energy[:highest_local_min_index]))) if e < local_min_energy),
+            (None, None)  # Default value if no match is found
+        )
+
+        if prev_lower_energy is not None:
+            hill_height = max(energy[li:highest_local_min_index])-local_min_energy
+            if hill_height < 5*(10)**(-5) and (highest_local_min_index - li) < 4 and (local_min_energy - prev_lower_energy) < 10**(-4) and li not in local_minima:
+                energy[li+1:highest_local_min_index] = np.linspace(energy[li], energy[highest_local_min_index], highest_local_min_index - li + 1)[1:-1]
+                return last_local_minimum(energy)
+        return highest_local_min_index + 3
+    return 0
 
 
 def main(file):
@@ -251,11 +323,10 @@ def main(file):
     """
     print(f"Processing file: {file}")
     data = parse(file)
-    # data = reassign_roots(data)
+    # data = cleanup(data)  # todo: temp: no cleaning
     action = "o"  # overview plot
     low = None
     high = 0
-    criterion = 'rspp'
     thresholds = None
     min_e = None
     max_e = None
@@ -275,7 +346,7 @@ def main(file):
                             "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
                             "    'z': input nuclear charge Z\n"
                             "    't': input list of thresholds\n"
-                            f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
+                            # f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
                             "    'x': exit\n"
                             )
         try:
@@ -285,8 +356,8 @@ def main(file):
             elif next_action == 'ssr':
                 criterion = 'ssr'
                 print("DOS fits sorted by least sum of square residues (SSR).")
-            elif next_action == 'd':
-                DOSpeak.discontinuity_treatment = 'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'
+            # elif next_action == 'd':
+            #     DOSpeak.discontinuity_treatment = 'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'
             elif next_action == 'x':
                 exit()
             elif next_action == 'z':
@@ -302,6 +373,7 @@ def main(file):
                         while thresholds[-1] < max_e:
                             n += 1
                             thresholds.append(-z * z / 2. / n / n)
+                        thresholds.append(0)
                         print(f"Threshold values: {' '.join([str(t) for t in thresholds if t > min_e])}")
                         ok = True
                     except:
@@ -313,6 +385,8 @@ def main(file):
                     try:
                         thresholds = [float(t) for t in inp_t.split()]
                         thresholds.sort()
+                        if len(thresholds) and thresholds[-1] < 0:
+                            thresholds.append(0)
                         print(f"Threshold values: {' '.join([str(t) for t in thresholds])}")
                         ok = True
                     except Exception as e:
@@ -338,7 +412,47 @@ def main(file):
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
 
     data = computeDOS(data)
-    fitDOS(data, (low, high), criterion, thresholds, result_file=project_directory(file) + "resonances.txt")
+    fitDOS(data, (low, high), thresholds, project_directory(file))
+
+    print(f"Plotting resonance overviews to {project_directory(file)}resonance_plots...")
+    # current_threshold = thresholds[0]
+    # for res in Resonance.resonances:
+    #     if res.threshold != current_threshold:
+    #         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, max(res.energy-5*res.best_fit.fit_Gamma, current_threshold), res.threshold, f"{plot.threshold_dir(project_directory(file), res.threshold)}all_res.png")
+    #         current_threshold = res.threshold
+    max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None])
+    for i, threshold in enumerate(thresholds):
+        if i > 0 and threshold <= max_thr:
+            plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, thresholds[i-1], threshold, f"{plot.threshold_dir(project_directory(file), threshold)}all_res.png")
+    plot.resonance_summary_grid(project_directory(file), Resonance.resonances)
+
+    while not action == 'ok':
+        action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
+              f"    'ok': Accept & print results\n"
+              f"    'iRj': For resonance #i, select the peak of root #j\n"
+              f"    'iR': De-select resonance #i\n")
+        changes = re.findall(r'(\d+)R(\d+)?', action)
+        changed_thresholds = []
+        for change in changes:
+            res_index = int(change[0])
+            if res_index < len(Resonance.resonances):
+                res = Resonance.resonances[res_index]
+                changed_thresholds.append(res.threshold)
+                if change[1]:
+                    root_peaks = [p for p in res.peaks if p.root == int(change[1])]
+                    if len(root_peaks):
+                        res.best_fit = root_peaks[0]
+                        res.energy = root_peaks[0].fit_E
+                else:
+                    res.best_fit = None
+        for i, threshold in enumerate(thresholds):  # redo overview plots
+            if i > 0 and threshold in changed_thresholds:
+                plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, thresholds[i - 1], threshold, f"{plot.threshold_dir(project_directory(file), threshold)}all_res.png")
+
+    print_result_file(project_directory(file) + "resonances.txt")
+    #  Todo:
+    #   * implement toghether-fitting of double peaks
+    #   * Better estimate of initial fit parameters
 
     input_string = f"\nPlease specify your next action: \n\n    'p': plot best fit for all resonances\n"
     populated_thresholds = set([res.threshold for res in Resonance.resonances])
@@ -350,12 +464,10 @@ def main(file):
         action = input(input_string)
         if action == 'p':
             plot.resonance_fits(project_directory(file), Resonance.resonances)
-            plot.resonance_summary_grid(project_directory(file), Resonance.resonances)
             break
         elif action in [f'p{i}' for i, t in enumerate(thresholds)]:
             i = int(action[1:])
             plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
-            plot.resonance_summary_grid(project_directory(file), Resonance.get_resonances_for_threshold(thresholds[i]))
         elif action == 'x':
             break
         else:
