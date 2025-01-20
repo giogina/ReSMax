@@ -4,9 +4,8 @@ import numpy as np
 import warnings
 from scipy import optimize
 
-import plot
-
 verbose = False
+
 
 def lorentzian(E, y0, A, Gamma, Er):
     """
@@ -50,8 +49,9 @@ class DOSpeak:
         self.approx_y0 = min(rho) / 2
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
         # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
-        self.energy_below, self.energy_above = self.max_energy_window(energy, rho)  # fit_E needs to fall between these
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
+        self.slope_energies = []  # temp
+        self.deriv_ratio = self.compute_dos_derivative_ratio()
         self.fitted_dos_array = None
         self.fit_E = None
         self.fit_Gamma = None
@@ -60,13 +60,12 @@ class DOSpeak:
         self.fit_gamma = None
         self.ssr = None
         self.rel_ssr_per_point = None
-        self.worse = []
         self.trim_left = 0
         self.trim_right = 0
         self.using_pointwise_energy = False
         self.nr_fit_attempts = 0
+        self.energy_below, self.energy_above = None, None  # fit_E needs to fall between these
         self.warning = None
-
 
     def trim(self, energy, rho, gamma):
         highest_i = np.argmax(rho)
@@ -87,7 +86,6 @@ class DOSpeak:
                 print(f"Root {self.root}, peak {self.approx_peak_E}: {len(rho) - trim_right} points trimmed off right.")
         return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
 
-
     def trim_half(self, energy, dos):
         deriv_num = (dos[1:] - dos[:-1])
         deriv = deriv_num/(energy[1:] - energy[:-1])
@@ -104,7 +102,6 @@ class DOSpeak:
                 return i  # getting steeper again; cut off here.
             prev_delta = delta
         return len(dos)  # no trimming condition found; use whole arrays
-
 
     def get_smooth_lorentzian_curve(self, x_array):
         """
@@ -123,6 +120,14 @@ class DOSpeak:
         Print the fitted parameters for the DOS peak.
         """
         print(f"Root #{self.root}, E = {self.fit_E}, Gamma = {self.fit_Gamma}, A = {self.fit_A}, y0 = {self.fit_y0}")
+
+    def distance_in_Gamma(self, peak):
+        """
+        Get the distance to another peak's maximum as multiple of own Gamma
+        """
+        if self.fit_E is None or peak.fit_E is None:
+            return None
+        return np.abs(self.fit_E - peak.fit_E) / self.fit_Gamma
 
     def estimate_gamma(self):
         """
@@ -162,7 +167,6 @@ class DOSpeak:
 
         return [y0, A, Gamma, Er]
 
-
     def fit_lorentzian(self):
         """
         Fit the Lorentzian model to the DOS data.
@@ -170,13 +174,11 @@ class DOSpeak:
         Returns:
         list: Optimized parameters [y0, A, Gamma, Er] or None if the fit failed.
         """
-        if self.root == 14:
-            y0, A, Gamma, Er = self.initial_guesses()
-            guessed_peak = DOSpeak(self.energy_array, self.dos_array, self.gamma_array, self.root, self.approx_peak_E, self.approx_peak_rho)
-            guessed_peak.fit_E = Er
-            guessed_peak.fit_A = A
-            guessed_peak.fit_y0 = y0
-            guessed_peak.fit_Gamma = Gamma
+        if self.deriv_ratio < 0.3:
+            if verbose:
+                print(f"Root {self.root}: Peak at E={self.approx_peak_E}, rho={self.approx_peak_rho} is too asymmetrical to bother fitting.")
+            return None
+
         self.nr_fit_attempts += 1
         try:
             guesses = self.initial_guesses()
@@ -190,7 +192,7 @@ class DOSpeak:
         except Exception as e:
             if verbose:
                 print(f"Root {self.root}: Fit failed for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
-            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
+            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20: # TODO: Is this responsible for truncated peaks?
                 if verbose: print("Retrying...")  # todo: also retry above?
                 self.approx_peak_E -= 0.0001  # todo: less arbitrary steps
                 self.approx_peak_rho -= 0.0001 * (self.dos_array[2] - self.dos_array[1])/(self.energy_array[2] - self.energy_array[1])
@@ -208,7 +210,7 @@ class DOSpeak:
         else:
             self.fitted_dos_array = np.array([lorentzian(e, *popt) for e in self.energy_array])
             self.ssr = np.sum((self.dos_array - self.fitted_dos_array) ** 2)
-            self.rel_ssr_per_point = math.sqrt(self.ssr) / (len(self.dos_array)) / self.approx_peak_rho
+            self.rel_ssr_per_point = math.sqrt(self.ssr) / (len(self.dos_array)) / self.approx_peak_rho**2  # / (0.01+self.deriv_ratio)
             self.fit_E = popt[3]
             self.fit_Gamma = popt[2]
             self.fit_A = popt[1]
@@ -222,7 +224,51 @@ class DOSpeak:
 
             return popt
 
-    def max_energy_window(self, energy, rho):
+    def compute_dos_derivative_ratio(self):
+        """
+        Compute the ratio of the smallest to largest absolute value of the
+        minimum and maximum derivatives of the DOS vs. energy.
+
+        Returns:
+        float: The ratio of |min_derivative| to |max_derivative| for DOS vs. energy.
+        """
+        max_index = np.argmax(self.dos_array)
+        if max_index < 3 or max_index > len(self.dos_array) - 4:
+            return 0  # If too few points are available on one side, return 0.
+
+        derivatives = np.gradient(self.dos_array, self.energy_array)
+        min_derivative = abs(np.min(derivatives))
+        max_derivative = abs(np.max(derivatives))
+
+        max_slope_index = np.argmax(derivatives)
+        max_slope = derivatives[max_slope_index]
+        if len(derivatives[:max_slope_index]) and len(derivatives[max_slope_index:]):
+            half_slope_1 = np.argmin(np.abs(derivatives[max_slope_index:] - max_slope / 2))+max_slope_index
+            half_slope_2 = np.argmin(np.abs(derivatives[:max_slope_index] - max_slope / 2))
+            Em = self.energy_array[max_slope_index]
+            Ehs1 = self.energy_array[half_slope_1]
+            Ehs2 = self.energy_array[half_slope_2]
+            Er_by_max = self.energy_array[max_index]
+            Er_by_outer_half_slope = 1.424839036*Ehs1-.4248390359*Em
+            Er_by_inner_half_slope = -.7136756879*Ehs2+1.713675688*Em
+            W_by_outer = 4.935787206*(Ehs1-Em)
+            W_by_inner = 2.472245103*(Em-Ehs2)
+            # print(f"Er guesses: {Er_by_max}, {Er_by_outer_half_slope}, {Er_by_inner_half_slope};  Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%")
+            # print(f"Gamma guesses: {W_by_outer}, {W_by_inner}")
+            self.slope_energies = [max_slope_index, half_slope_1, half_slope_2, self.energy_array[max_index], 1.424839036*Ehs1-.4248390359*Em,-.7136756879*Ehs2+1.713675688*Em, f"Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%"]
+
+        if min(min_derivative, max_derivative) != 0:
+            ratio = min(min_derivative, max_derivative) / max(min_derivative, max_derivative)
+        else:
+            ratio = 0
+
+        # print(f"Min derivative = {min_derivative:.6f}")
+        # print(f"Max derivative = {max_derivative:.6f}")
+        # print(f"Ratio (|min|/|max|) = {ratio:.6f}")
+
+        return ratio
+
+    def max_energy_window(self):
         """
         Determines the energy window surrounding the maximum DOS value.
 
@@ -241,24 +287,34 @@ class DOSpeak:
                position, e_below or e_above will be None, respectively.
         """
         # Find the index of the maximum DOS value
-        max_index = np.argmax(rho)
 
-        # Handle edge cases where the maximum is at the first or last position
-        if max_index == 0:
-            e_below = None
-            e_above = energy[max_index + 1]
-        elif max_index == len(energy) - 1:
-            e_below = energy[max_index - 1]
-            e_above = None
+        if self.fit_Gamma is not None:
+            e_below = self.pointwise_energy - self.fit_Gamma*0.2
+            e_above = self.pointwise_energy + self.fit_Gamma*0.2
         else:
-            e_below = energy[max_index - 1]
-            e_above = energy[max_index + 1]
-        if e_below is None or e_above is None:
-            print(f"Warning: Root {self.root}, peak {self.approx_peak_E}: Maximum is at edge.")
+            e_below = None
+            e_above = None
+
+        # max_index = np.argmax(self.dos_array)
+        # if max_index == 0:
+        #     e_below = None
+        #     e_above = self.energy_array[max_index + 1]
+        # elif max_index == len(self.energy_array) - 1:
+        #     e_below = self.energy_array[max_index - 1]
+        #     e_above = None
+        # else:
+        #     e_below = self.energy_array[max_index - 1]
+        #     e_above = self.energy_array[max_index + 1]
+
+        # if self.fit_Gamma is not None:
+        #     print(e_below, e_above, self.pointwise_energy - self.fit_Gamma*0.01, self.pointwise_energy + self.fit_Gamma*0.01)
+        # if e_below is None or e_above is None:
+        #     print(f"Warning: Root {self.root}, peak {self.approx_peak_E}: Maximum is at edge.")
 
         return e_below, e_above
 
     def check_fit(self):
+        self.energy_below, self.energy_above = self.max_energy_window()
         max_index = np.argmax(self.dos_array)
         if max_index == 0:
             self.warning = "Only right side of peak available to fit!"
@@ -281,8 +337,5 @@ class DOSpeak:
         return True
 
     def energy(self):
-        if DOSpeak.discontinuity_treatment == "fit":
-            return self.fit_E
-        else:
-            return self.pointwise_energy if self.using_pointwise_energy else self.fit_E
+        return self.fit_E
             
