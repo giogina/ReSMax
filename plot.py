@@ -154,7 +154,7 @@ def resonance_fits(project_dir, resonances, threshold=None):
         print(f"Plots saved to {threshold_dir(project_dir, threshold)}")
 
 
-def resonance_summary_grid(project_dir, resonances):
+def resonance_summary_grid(project_dir, resonances, resonance_index=None):
     """
     Create a grid plot for each resonance, showing all peaks associated with it.
 
@@ -166,7 +166,12 @@ def resonance_summary_grid(project_dir, resonances):
     norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
     cmap = plt.cm.get_cmap("RdYlGn")  # Gradient from red to green
 
-    for res in resonances:
+    resonances_to_plot = (
+        [resonances[resonance_index]] if resonance_index is not None and 0 <= resonance_index < len(resonances)
+        else resonances
+    )
+
+    for res in resonances_to_plot:
         fig, axs = plt.subplots(nrows=((len(res.peaks)+1) // 3) + 1, ncols=3, figsize=(18, 6 * (((len(res.peaks)+1) // 3) + 1)))
         axs = axs.flatten()
 
@@ -214,8 +219,11 @@ def resonance_summary_grid(project_dir, resonances):
             ax.axis('off')
 
         plt.tight_layout()
-        plt.savefig(f"{threshold_dir(project_dir, res.threshold)}[{res.index}]{res.energy:.8f}.png")
+        output_file = f"{threshold_dir(project_dir, res.threshold)}[{res.index}]{res.energy:.8f}.png"
+        plt.savefig(output_file)
         plt.close()
+        if resonance_index is not None:
+            open_plot(output_file)
 
 
 def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=None):
@@ -315,7 +323,7 @@ def plot_resonance_partitions_with_clustering(data, resonances, prev_threshold, 
     emin = max(res_thr[0].best_fit.fit_E-10*res_thr[0].best_fit.fit_Gamma, prev_threshold)
     emax = threshold
 
-    fig = plt.figure(figsize=(42, 24))
+    fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
@@ -329,7 +337,7 @@ def plot_resonance_partitions_with_clustering(data, resonances, prev_threshold, 
             if res.best_fit is not None:
                 ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
             for peak in res.peaks:
-                ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.2)
+                ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
                 vertical_offset = 0.0005
                 if emin < peak.fit_E+vertical_offset < emax:
                     ax1.text(peak.fit_gamma, peak.fit_E + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black')
@@ -358,4 +366,5 @@ def plot_resonance_partitions_with_clustering(data, resonances, prev_threshold, 
     plt.subplots_adjust(wspace=0)
     plt.savefig(output_file)
     plt.close()
+    open_plot(output_file)
 
