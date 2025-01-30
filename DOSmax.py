@@ -467,8 +467,8 @@ def main(file):
                     try:
                         _, emin, emax = action.split()
                         resonance_overview_range = [float(emin), float(emax)]
+                        resonance_overview_range.sort()
                         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
-                        print("plot", resonance_overview_range)
 
                         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
                     except ValueError:
@@ -498,8 +498,6 @@ def main(file):
                                     changed_thresholds.append(res.threshold)
                     if i > 0 and threshold in changed_thresholds: # redo overview plot
                         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
-
-# TODO: adjust spacing of 3R33 annotations; make active one bold.
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Todo:

@@ -333,7 +333,6 @@ def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, outp
     fitted_peaks_by_root (dict): Dictionary of fitted peaks organized by root.
     output_file (str): The path where the plot will be saved.
     """
-
     res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
     res_thr.sort(key=lambda r: r.energy)
     emin = max(res_thr[0].best_fit.fit_E - 10 * res_thr[0].best_fit.fit_Gamma, emin)
@@ -353,9 +352,9 @@ def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, outp
                 ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
             for peak in res.peaks:
                 ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
-                vertical_offset = 0.0005
+                vertical_offset = 0.0016 * (emax-emin)
                 if emin < peak.fit_E+vertical_offset < emax:
-                    ax1.text(peak.fit_gamma, peak.fit_E + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black')
+                    ax1.text(peak.fit_gamma, peak.fit_E + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black', fontweight="bold" if peak==res.best_fit else "normal")
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
