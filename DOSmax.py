@@ -176,6 +176,7 @@ def print_result_file(max_threshold, result_file):
                 )
 
     print(f"\nResults have been written to {result_file}.")
+    plot.open_file(result_file)
 
 
 def sliding_window_average(data, e_min, e_max, window_size):

@@ -34,7 +34,7 @@ def plot_DOS(data, root, file, fitted_peaks_by_root=None):
             plt.plot([min(x_data), max(x_data)], [peak.energy(), peak.energy()], 'r-')
     plt.savefig(file)
     plt.close()
-    open_plot(file)
+    open_file(file)
 
 
 def peak_fit(dos_peak, file):
@@ -58,7 +58,7 @@ def peak_fit(dos_peak, file):
     plt.xlim(xmin, xmax)
     plt.savefig(file)
     plt.close()
-    with open(f"{file[:-5]}.txt", 'w') as plot_data_file:
+    with open_file(f"{file[:-5]}.txt", 'w') as plot_data_file:
         plot_data_file.write(np.array2string(x_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(y_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(x_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
@@ -104,11 +104,11 @@ def overview(data, plot_file, from_e=None, to_e=None):
 
     plt.savefig(plot_file)
     plt.close()
-    open_plot(plot_file)
+    open_file(plot_file)
     return min_E, max_E
 
 
-def open_plot(file):
+def open_file(file):
     """
     Open a file using the default application based on the operating system.
 
@@ -223,7 +223,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None):
         plt.savefig(output_file)
         plt.close()
         if resonance_index is not None:
-            open_plot(output_file)
+            open_file(output_file)
 
 
 def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=None):
@@ -303,7 +303,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     plt.tight_layout()
     plt.savefig(output_file)
     plt.close()
-    open_plot(output_file)
+    open_file(output_file)
 
 
 def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, output_file):
@@ -363,5 +363,5 @@ def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, outp
     plt.subplots_adjust(wspace=0)
     plt.savefig(output_file)
     plt.close()
-    open_plot(output_file)
+    open_file(output_file)
 
