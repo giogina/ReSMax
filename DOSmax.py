@@ -332,7 +332,7 @@ def main(file):
     """
     print(f"Processing file: {file}")
     data = parse(file)
-    # data = cleanup(data)  # todo: temp: no cleaning
+    # data = cleanup(data)  # temp: no cleaning
     action = "o"  # overview plot
     low = None
     high = 0
@@ -356,24 +356,25 @@ def main(file):
                             "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
                             "    'z': input nuclear charge Z\n"
                             "    't': input list of thresholds\n"
-                            "    'p': Plot panorama log(DOS) vs E\n" # todo: allow emin..emax
+                            "    'p': Plot panorama log(DOS) vs E\n"
+                            "    'p E_min E_max': Plot panorama log(DOS) vs E for E = E_min..Emax\n"
                             # f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
                             "    'x': exit\n"
                             )
         try:
-            if next_action == 'rspp':
+            if next_action.lower() == 'rspp':
                 criterion = 'rspp'
                 print("DOS fits sorted by least relative SSR per data point.")
-            elif next_action == 'ssr':
+            elif next_action.lower() == 'ssr':
                 criterion = 'ssr'
                 print("DOS fits sorted by least sum of square residues (SSR).")
-            # elif next_action == 'd':
+            # elif next_action.lower() == 'd':
             #     DOSpeak.discontinuity_treatment = 'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'
-            elif next_action == 'x':
+            elif next_action.lower() == 'x':
                 exit()
-            elif next_action == 'p':
+            elif next_action.lower() == 'p':
                 plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file)[:-1] + "_dos_panorama.png")
-            elif next_action == 'z':
+            elif next_action.lower() == 'z':
                 ok = False
                 while not ok:
                     inp_z = input("Z = ")
@@ -391,7 +392,7 @@ def main(file):
                         ok = True
                     except:
                         print("Please input an integer.")
-            elif next_action == 't':
+            elif next_action.lower() == 't':
                 ok = False
                 while not ok:
                     inp_t = input("Threshold values (separate by space) = ")
@@ -412,6 +413,8 @@ def main(file):
                     high = float(response[2])
                     if action == "o":
                         redo_overview = True
+                    if action == "p":
+                        plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file)[:-1] + f"_dos_panorama_{low}_{high}.png", low, high)
                 elif len(response) == 1 and response[0] == "o":  # reset overview
                     low = None
                     high = 0

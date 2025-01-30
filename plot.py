@@ -244,7 +244,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             open_file(output_file, open_files)
 
 
-def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=None):
+def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None, clustering_output=None):
     """
     Plot all fitted peaks of all resonances in a single wide scatter plot (DOS vs. energy).
 
@@ -309,8 +309,10 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
 
     plt.xlabel("Energy (a.u.)")
     plt.ylabel("log10(DOS)")
-    # emin, emax = -0.53, -0.50
-    emin, emax = -1, 0
+    if emin is None:
+        emin = -1
+    if emax is None:
+        emax = 0
     plt.xlim(emin, emax)
     plt.ylim(-0.2, 5)
     tick_positions = np.linspace(emin, emax, int(1/0.01))
