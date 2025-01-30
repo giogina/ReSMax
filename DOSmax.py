@@ -124,12 +124,14 @@ def fitDOS(data, energy_range, thresholds, project_dir):
     Resonance.resonances.sort(key=lambda r: r.energy)
                 
                 
-def print_result_file(result_file):
+def print_result_file(max_threshold, result_file):
     current_threshold = None
     with open(result_file, 'a') as save_file:
         for res in Resonance.resonances:
             if res.threshold != current_threshold:
                 current_threshold = res.threshold
+                if current_threshold > max_threshold:
+                    break
                 print(f"\nResonances found below threshold E = {current_threshold}:")
                 save_file.write(f"\r\nResonances found below threshold {current_threshold}:\r\n")
                 save_file.write(f"Energy             Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
@@ -430,14 +432,13 @@ def main(file):
     #         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, max(res.energy-5*res.best_fit.fit_Gamma, current_threshold), res.threshold, f"{plot.threshold_dir(project_directory(file), res.threshold)}all_res.png")
     #         current_threshold = res.threshold
 
-    user_done = False
-    max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None])
+    max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None]) # governs check loop and resonances.txt output cutoff!
     i = 1
     while i<len(thresholds):
         threshold = thresholds[i]
         resonance_overview_range = [thresholds[i-1], threshold]
         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}all_resonances_{threshold:.3f}.png"
-        if user_done:
+        if threshold > max_thr:
             break
 
         if i > 0 and threshold <= max_thr:
@@ -460,8 +461,9 @@ def main(file):
                     if i > 1:
                         i = i - 1
                     break
-                elif action.lower() == "end": # todo: do not print resonances after end
-                    user_done = True
+                elif action.lower() == "end":
+                    max_thr = threshold
+                    i = i + 1
                     break
                 elif action.lower().startswith("grid"): # todo: mark active plot in grid
                     _, i = action.split()
@@ -505,7 +507,7 @@ def main(file):
 
 # TODO: adjust spacing of 3R33 annotations; make active one bold.
 
-    print_result_file(project_directory(file) + "resonances.txt")
+    print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Todo:
     #   * implement toghether-fitting of double peaks
     #   * Better estimate of initial fit parameters
