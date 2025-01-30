@@ -432,7 +432,9 @@ def main(file):
 
     user_done = False
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None])
-    for i, threshold in enumerate(thresholds):
+    i = 1
+    while i<len(thresholds):
+        threshold = thresholds[i]
         resonance_overview_range = [thresholds[i-1], threshold]
         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}all_resonances_{threshold:.3f}.png"
         if user_done:
@@ -445,13 +447,18 @@ def main(file):
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
                           f"    'ok': Accept & proceed to next threshold\n"
+                        + (f"    'back': Return to previous threshold\n" if (i>1) else "") +
                           f"    'end': Skip remaining thresholds & print results\n"
                           f"    'iRj': For resonance #i, select the peak of root #j\n"
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
-                          f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()  # todo: Back option to change previous threshold
-                print(action)
+                          f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()
                 if action.lower() == "ok": # todo: close plots opened during this loop
+                    i = i + 1
+                    break
+                elif action.lower() == "back":
+                    if i > 1:
+                        i = i - 1
                     break
                 elif action.lower() == "end": # todo: do not print resonances after end
                     user_done = True
@@ -472,7 +479,6 @@ def main(file):
                         print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
                 else:
                     changes = re.findall(r'(\d+)R(\d+)?', action)
-                    print("R", changes, resonance_overview_range)
                     if not len(changes):
                         print("Invalid input.")
                     changed_thresholds = []
@@ -483,14 +489,17 @@ def main(file):
                             if not res.threshold == threshold:
                                 print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
                             else:
-                                changed_thresholds.append(res.threshold)
                                 if change[1]:
                                     root_peaks = [p for p in res.peaks if p.root == int(change[1])]
                                     if len(root_peaks):
                                         res.best_fit = root_peaks[0]
                                         res.energy = root_peaks[0].fit_E
+                                        changed_thresholds.append(res.threshold)
+                                    else:
+                                        print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
                                 else:
                                     res.best_fit = None
+                                    changed_thresholds.append(res.threshold)
                     if i > 0 and threshold in changed_thresholds: # redo overview plot
                         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name)
 
