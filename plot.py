@@ -1,6 +1,8 @@
 import os
 import subprocess
 import platform
+from io import open_code
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
@@ -107,21 +109,33 @@ def overview(data, plot_file, from_e=None, to_e=None):
     open_file(plot_file)
     return min_E, max_E
 
-
-def open_file(file):
+def open_file(file, opened_files = None):
     """
     Open a file using the default application based on the operating system.
 
     Parameters:
     file (str): The file path to open.
     """
+    # (opened_files is not a useful list due to xdg-open automatically choosing a software. Could track pid's, but that's too complicated.)
     if platform.system() == 'Windows':
         os.startfile(file)
     elif platform.system() == 'Darwin':  # macOS
-        subprocess.call(('open', file))
-    else:  # Linux and other Unix-like systems
+        subprocess.call(('open', file))  # necessary for .txt?
+        # proc = subprocess.Popen(['open', file])
+    else:  # Linux and other Unix-like
         subprocess.call(('xdg-open', file))
+        # proc = subprocess.Popen(['xdg-open', file])
+    # if opened_files is not None:
+    #     opened_files.append(proc)  # Store process reference
 
+# def close_files(opened_files):
+#     for proc in opened_files:
+#         if isinstance(proc, subprocess.Popen):
+#             try:
+#                 proc.terminate()
+#             except Exception as e:
+#                 pass
+#     opened_files.clear()
 
 def threshold_dir(project_dir, threshold):
     sep = '\\' if '\\' in project_dir else '/'
@@ -154,7 +168,7 @@ def resonance_fits(project_dir, resonances, threshold=None):
         print(f"Plots saved to {threshold_dir(project_dir, threshold)}")
 
 
-def resonance_summary_grid(project_dir, resonances, resonance_index=None):
+def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_files=None):
     """
     Create a grid plot for each resonance, showing all peaks associated with it.
 
@@ -201,7 +215,11 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None):
             ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
             ax.ticklabel_format(style='sci', axis='x', scilimits=(-2, 2))  # Use scientific notation if numbers are too large/small
 
-            # fit_text = (f"E = {peak.fit_E:.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
+            if peak == res.best_fit:
+                annotation = "<Selected>"
+                ax.text(0.5, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='center')
+
+                # fit_text = (f"E = {peak.fit_E:.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
             #             f"A = {peak.fit_A:.6f}\ny0 = {peak.fit_y0:.6f}\n"
             #             f"Rel SSR = {peak.rel_ssr_per_point:.3e}\n")
             # if len(peak.slope_energies):
@@ -223,7 +241,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None):
         plt.savefig(output_file)
         plt.close()
         if resonance_index is not None:
-            open_file(output_file)
+            open_file(output_file, open_files)
 
 
 def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=None):
@@ -263,7 +281,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     for key in data.keys():
         if type(key) is str and key.startswith("rho_"):  # Identify DOS arrays
             root = int(key[4:])
-            # indices = data[f"cleaned_{root}"][2:-2]  # todo: peaks are skewed now; this seems wrong?
+            # indices = data[f"cleaned_{root}"][2:-2]
             rho = data[key]#[indices]
             energy = data[root][1:-1]#[indices]  # Corresponding energy array for the root
             color = get_root_color(root)
@@ -306,7 +324,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, clustering_output=No
     open_file(output_file)
 
 
-def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, output_file):
+def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files):
     """
     Plot the partitioned sections of each root based on fitted peaks.
 
@@ -363,5 +381,5 @@ def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, outp
     plt.subplots_adjust(wspace=0)
     plt.savefig(output_file)
     plt.close()
-    open_file(output_file)
+    open_file(output_file, open_files)
 

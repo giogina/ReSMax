@@ -356,7 +356,7 @@ def main(file):
                             "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
                             "    'z': input nuclear charge Z\n"
                             "    't': input list of thresholds\n"
-                            "    'p': Plot panorama log(DOS) vs E\n"
+                            "    'p': Plot panorama log(DOS) vs E\n" # todo: allow emin..emax
                             # f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
                             "    'x': exit\n"
                             )
@@ -427,12 +427,6 @@ def main(file):
     
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
-    # current_threshold = thresholds[0]
-    # for res in Resonance.resonances:
-    #     if res.threshold != current_threshold:
-    #         plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, max(res.energy-5*res.best_fit.fit_Gamma, current_threshold), res.threshold, f"{plot.threshold_dir(project_directory(file), res.threshold)}all_res.png")
-    #         current_threshold = res.threshold
-
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None]) # governs check loop and resonances.txt output cutoff!
     i = 1
     while i<len(thresholds):
@@ -444,7 +438,7 @@ def main(file):
 
         if i > 0 and threshold <= max_thr:
             print(f"Plotting resonance overview for threshold {threshold}...")
-            plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name)
+            plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
 
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
@@ -455,7 +449,7 @@ def main(file):
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()
-                if action.lower() == "ok": # todo: close plots opened during this loop
+                if action.lower() == "ok":
                     i = i + 1
                     break
                 elif action.lower() == "back":
@@ -466,10 +460,9 @@ def main(file):
                     max_thr = threshold
                     i = i + 1
                     break
-                elif action.lower().startswith("grid"): # todo: mark active plot in grid
-                    _, i = action.split()
-                    print("grid", i)
-                    resonance_summary_grid(project_directory(file), Resonance.resonances, int(i))
+                elif action.lower().startswith("grid"):
+                    _, n = action.split()
+                    resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
                 elif action.startswith("plot"):
                     try:
                         _, emin, emax = action.split()
@@ -477,7 +470,7 @@ def main(file):
                         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
                         print("plot", resonance_overview_range)
 
-                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name)
+                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
                     except ValueError:
                         print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
                 else:
@@ -504,7 +497,7 @@ def main(file):
                                     res.best_fit = None
                                     changed_thresholds.append(res.threshold)
                     if i > 0 and threshold in changed_thresholds: # redo overview plot
-                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name)
+                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
 
 # TODO: adjust spacing of 3R33 annotations; make active one bold.
 
