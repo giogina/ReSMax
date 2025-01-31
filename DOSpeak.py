@@ -46,6 +46,7 @@ class DOSpeak:
         self.approx_peak_E = peak_E
         self.approx_peak_rho = peak_rho
         self.approx_y0 = min(rho) / 2
+        self.approx_Gamma = None
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
         # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
@@ -182,6 +183,8 @@ class DOSpeak:
         self.nr_fit_attempts += 1
         try:
             guesses = self.initial_guesses()
+            self.approx_Gamma = guesses[2]
+            self.fit_arrays_to_Gamma_multiple()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", optimize.OptimizeWarning)
                 if self.nr_fit_attempts == 1:
@@ -221,8 +224,7 @@ class DOSpeak:
                 print(f"Root {self.root}: Er = {int(popt[3] * 10000) / 10000}, Gamma = {int(popt[2] * 1000000) / 1000000}, A = {int(popt[1] * 10000) / 10000}, y0 = {int(popt[0] * 1000) / 1000};     Relative SSR per data point: {self.rel_ssr_per_point}")
 
             self.check_fit()
-            self.fit_arrays_to_Gamma_multiple()
-
+            # print(f"E: {abs((self.fit_E - self.approx_peak_E)/self.fit_E)*100:.3f}%, Gamma: {abs((self.fit_Gamma - guesses[2])/self.fit_Gamma)*100:.3f}%, {self.rel_ssr_per_point:.6f}, {self.warning}")
             return popt
 
 
@@ -230,11 +232,14 @@ class DOSpeak:
         """
         Trim the energy, DOS, and gamma arrays to fit within [fit_E - multiple*fit_Gamma, fit_E + multiple*fit_Gamma].
         """
-        if self.fit_E is None or self.fit_Gamma is None:
+
+        energy = self.approx_peak_E
+        gamma = self.approx_Gamma
+        if energy is None or gamma is None:
             return
 
-        E_min = self.fit_E - multiple * self.fit_Gamma
-        E_max = self.fit_E + multiple * self.fit_Gamma
+        E_min = energy - multiple * gamma
+        E_max = energy + multiple * gamma
 
         # Find indices within the trim range
         energy_mask = (self.energy_array >= E_min) & (self.energy_array <= E_max)

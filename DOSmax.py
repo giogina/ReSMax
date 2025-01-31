@@ -6,6 +6,8 @@ import importlib.metadata
 
 verbose = False
 
+# Freeze: pyinstaller --onefile DOSmax.py
+
 def install_requirements():
     """Ensure all required dependencies are installed."""
 
@@ -177,7 +179,6 @@ def fitDOS(data, energy_range, thresholds, project_dir):
         res.categorize_by_thresholds(thresholds)
     Resonance.resonances.sort(key=lambda r: r.energy)
 
-                
                 
 def print_result_file(max_threshold, result_file):
     current_threshold = None
