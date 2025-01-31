@@ -496,9 +496,9 @@ def main(file):
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
                           f"    'ok': Accept & proceed to next threshold\n"
-                        + (f"    'back': Return to previous threshold\n" if (i>1) else "") +  # todo: test the pid image closing after all?
+                        + (f"    'back': Return to previous threshold\n" if (i>1) else "") +
                           f"    'end': Skip remaining thresholds & print results\n"
-                          f"    'iRj': For resonance #i, select the peak of root #j\n"  # todo: add new resonance using "new [13R4 15R5]" ?
+                          f"    'iRj': For resonance #i, select the peak of root #j\n"
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n"
@@ -507,7 +507,7 @@ def main(file):
                 if action.lower() == "ok" or action.lower() == "next":
                     i = i + 1
                     break
-                elif action.lower() == "back" or action.lower().startswith("prev"):  # todo: make file of requirements of libraries; supply example data?
+                elif action.lower() == "back" or action.lower().startswith("prev"):
                     if i > 1:
                         i = i - 1
                     break
