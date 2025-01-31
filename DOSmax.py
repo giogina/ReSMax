@@ -32,7 +32,7 @@ def install_requirements():
         print(f"Installing missing dependencies: {', '.join(missing)}, please wait...")
 
         try:
-            # Skip upgrade if pip is at least 22.0 (or another threshold you choose)
+            # Skip upgrade if pip is at least 22.0
             current_version = importlib.metadata.version("pip")
             if tuple(map(int, current_version.split("."))) < (22, 0):
                 print("Upgrading pip...")
@@ -44,7 +44,7 @@ def install_requirements():
             try:
                 subprocess.check_call([sys.executable, "-m", "ensurepip"])
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-                import pip  # Try importing again after installation
+                import pip
             except Exception as e:
                 print(f"Failed to install pip: {e}")
                 return
