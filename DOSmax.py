@@ -134,7 +134,7 @@ def print_result_file(max_threshold, result_file):
                     break
                 print(f"\nResonances found below threshold E = {current_threshold}:")
                 save_file.write(f"\r\nResonances found below threshold {current_threshold}:\r\n")
-                save_file.write(f"Energy             Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
+                save_file.write(f"Energy       \t   Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
             if res.best_fit is not None:
                 print(f"{res.energy}, Root {res.best_fit.root}, SSR {res.best_fit.ssr}, Rel. SSR per point {res.best_fit.rel_ssr_per_point}, gamma = {res.best_fit.fit_gamma}, Gamma = {res.best_fit.fit_Gamma}, A = {res.best_fit.fit_A}, y0 = {res.best_fit.fit_y0}, Other roots = {[p.root for p in res.peaks]}")
                 save_file.write(
@@ -446,16 +446,16 @@ def main(file):
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
                           f"    'ok': Accept & proceed to next threshold\n"
-                        + (f"    'back': Return to previous threshold\n" if (i>1) else "") +
+                        + (f"    'back': Return to previous threshold\n" if (i>1) else "") +  # todo: test the pid image closing after all?
                           f"    'end': Skip remaining thresholds & print results\n"
-                          f"    'iRj': For resonance #i, select the peak of root #j\n"
+                          f"    'iRj': For resonance #i, select the peak of root #j\n"  # todo: add new resonance using Rj ?
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()
-                if action.lower() == "ok":
+                if action.lower() == "ok" or action.lower() == "next":
                     i = i + 1
                     break
-                elif action.lower() == "back":
+                elif action.lower() == "back" or action.lower().startswith("prev"):  # todo: make file of requirements of libraries; supply example data?
                     if i > 1:
                         i = i - 1
                     break

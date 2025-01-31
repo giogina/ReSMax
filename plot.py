@@ -120,10 +120,10 @@ def open_file(file, opened_files = None):
     if platform.system() == 'Windows':
         os.startfile(file)
     elif platform.system() == 'Darwin':  # macOS
-        subprocess.call(('open', file))  # necessary for .txt?
+        subprocess.call(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)  # .call necessary for .txt?
         # proc = subprocess.Popen(['open', file])
     else:  # Linux and other Unix-like
-        subprocess.call(('xdg-open', file))
+        subprocess.call(('xdg-open', file), stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['xdg-open', file])
     # if opened_files is not None:
     #     opened_files.append(proc)  # Store process reference
