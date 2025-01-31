@@ -92,14 +92,15 @@ class DOSpeak:
         prev_delta = 0
         for i, delta in enumerate(deriv):
             if abs(deriv_num[i]) > 0.6*max(dos):
-                # print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
+                if verbose:
+                    print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
                 return i+1
-            if steepening and abs(delta) < abs(prev_delta):
-                steepening = False  # we're past the steepest point of the peak flank
-            if not steepening and abs(delta) > abs(prev_delta):
-                # print(f"i={i}, re-steepening cut-off")
-                return i  # getting steeper again; cut off here.
-            prev_delta = delta
+            # if steepening and abs(delta) < abs(prev_delta):
+            #     steepening = False  # we're past the steepest point of the peak flank
+            # if not steepening and abs(delta) > abs(prev_delta):
+            #     print(f"i={i}, re-steepening cut-off")
+            #     return i  # getting steeper again; cut off here.
+            # prev_delta = delta
         return len(dos)  # no trimming condition found; use whole arrays
 
     def get_smooth_lorentzian_curve(self, x_array):
@@ -220,8 +221,43 @@ class DOSpeak:
                 print(f"Root {self.root}: Er = {int(popt[3] * 10000) / 10000}, Gamma = {int(popt[2] * 1000000) / 1000000}, A = {int(popt[1] * 10000) / 10000}, y0 = {int(popt[0] * 1000) / 1000};     Relative SSR per data point: {self.rel_ssr_per_point}")
 
             self.check_fit()
+            self.fit_arrays_to_Gamma_multiple()
 
             return popt
+
+
+    def fit_arrays_to_Gamma_multiple(self, multiple = 10):
+        """
+        Trim the energy, DOS, and gamma arrays to fit within [fit_E - multiple*fit_Gamma, fit_E + multiple*fit_Gamma].
+        """
+        if self.fit_E is None or self.fit_Gamma is None:
+            return
+
+        E_min = self.fit_E - multiple * self.fit_Gamma
+        E_max = self.fit_E + multiple * self.fit_Gamma
+
+        # Find indices within the trim range
+        energy_mask = (self.energy_array >= E_min) & (self.energy_array <= E_max)
+        valid_indices = np.where(energy_mask)[0]
+
+        if len(valid_indices) == 0:
+            return
+
+        trim_front = valid_indices[0]  # How many points are removed from the front
+        trim_back = len(self.energy_array) - valid_indices[-1] - 1  # From the back
+
+        self.energy_array = self.energy_array[valid_indices]
+        self.gamma_array = self.gamma_array[valid_indices]
+
+        # ✅ Trim DOS array consistently (it has one fewer point)
+        if len(self.dos_array) > trim_front + trim_back:
+            self.dos_array = self.dos_array[trim_front:-trim_back] if trim_back > 0 else self.dos_array[trim_front:]
+        else:
+            return
+
+        if verbose:
+            print(f"Root {self.root}: Trimmed arrays to range {E_min:.6f} - {E_max:.6f}, removed {trim_front} from front, {trim_back} from back.")
+
 
     def compute_dos_derivative_ratio(self):
         """

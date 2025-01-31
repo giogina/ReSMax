@@ -109,6 +109,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
     with open(result_file, 'w') as save_file:
         save_file.write("MBS:\r\n")
     print("Scanning all local DOS maxima...")
+    valley_points = []
     for key in data_keys:
         root = int(key[4:])
         energy_array = data[root][1:-1]
@@ -157,6 +158,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
                     ip += 1
                     p = peaks[ip]
                 if v < p < v2:  # successfully identified section
+                    valley_points.append([float(gamma_array[v]), float(energy_array[v])])
                     peak_E = float(energy_array[p])
                     peak_rho = float(dos_array[p])
                     if v2 - v >= 10:  # necessary to fit all parameters
@@ -168,10 +170,13 @@ def fitDOS(data, energy_range, thresholds, project_dir):
                         if dp.fit_E is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
                             fitted_peaks_by_root[root].append(dp)
 
+    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)
+    print("Finding resonances...")
     find_resonances(fitted_peaks_by_root)
     for res in Resonance.resonances:
         res.categorize_by_thresholds(thresholds)
     Resonance.resonances.sort(key=lambda r: r.energy)
+
                 
                 
 def print_result_file(max_threshold, result_file):
@@ -477,7 +482,6 @@ def main(file):
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
 
-    print("Fitting DOS...")
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None]) # governs check loop and resonances.txt output cutoff!
@@ -566,16 +570,19 @@ def main(file):
     for i, t in enumerate(thresholds):
         if t in populated_thresholds:
             input_string += f"    'p{i}': plot best fit for all resonances below threshold {t}\n"
+    input_string += "    'c': Close image viewer\n"
     input_string += "    'x': exit\n"
     while True:
         action = input(input_string)
-        if action == 'p':
+        if action.lower() == 'p':
             plot.resonance_fits(project_directory(file), Resonance.resonances)
             break
-        elif action in [f'p{i}' for i, t in enumerate(thresholds)]:
+        elif action.lower() in [f'p{i}' for i, t in enumerate(thresholds)]:
             i = int(action[1:])
             plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
-        elif action == 'x':
+        elif action.lower().startswith('c'):
+            plot.close_files(project_directory(file))
+        elif action.lower() == 'x':
             break
         else:
             print("Invalid input.")

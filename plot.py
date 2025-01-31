@@ -59,7 +59,7 @@ def peak_fit(dos_peak, file):
     plt.xlim(xmin, xmax)
     plt.savefig(file)
     plt.close()
-    with open_file(f"{file[:-5]}.txt", 'w') as plot_data_file:
+    with open(f"{file[:-5]}.txt", 'w') as plot_data_file:
         plot_data_file.write(np.array2string(x_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(y_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(x_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
@@ -397,4 +397,49 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     plt.savefig(output_file)
     plt.close()
     open_file(output_file, open_files)
+
+
+# Debug function
+def plot_partitions(data, fitted_peaks_by_root, output_file, points):
+    """
+    Plot the partitioned sections of each root based on fitted peaks.
+
+    Parameters:
+    data (dict): Parsed data containing energy, gamma, and DOS arrays.
+    fitted_peaks_by_root (dict): Dictionary of fitted peaks organized by root.
+    output_file (str): The path where the plot will be saved.
+    """
+    plt.figure(figsize=(32, 24))
+
+    for root in data.keys():
+        if type(root) is int:
+            plt.plot(data["gamma"], data[root], label=f"Root {root}", alpha=0.2)
+
+    for root, peaks in fitted_peaks_by_root.items():
+        for peak in peaks:
+            plt.scatter(peak.gamma_array, peak.energy_array, label=f"Root {root} Section", s=5)
+
+    plt.scatter([p[0] for p in points], [p[1] for p in points], s=7, facecolor="red", edgecolor="red")
+
+            # vertical_offset = -0.0015 if peak.is_left_half else 0.0015
+            # plt.text(
+            #     peak.fit_gamma,  # X-coordinate
+            #     peak.fit_E + vertical_offset,  # Y-coordinate with offset
+            #     # f"E={peak.fit_E:.3f}\nρ={peak.fit_Gamma:.3f}\n{peak.fit_A:.3f}, {peak.fit_y0:.3f}",  # Annotation text
+            #     # f"{peak.fit_Gamma:.1e}, {peak.fit_y0:.3f}, {peak.max_dos:.3f}",  # Annotation text
+            #     f"{peak.root}",  # Annotation text
+            #     fontsize=8,
+            #     ha='center',  # Horizontal alignment
+            #     va='bottom' if peak.is_left_half else 'top',  # Vertical alignment
+            #     color='black'
+            # )
+
+    plt.xlabel("Gamma")
+    plt.ylabel("Energy (a.u.)")
+    plt.ylim(-0.7, -0.5)
+    plt.title("Partitioned Sections of DOS by Root")
+    plt.savefig(output_file)
+    plt.close()
+    open_file(output_file)
+
 
