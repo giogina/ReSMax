@@ -561,8 +561,8 @@ def main(file):
                         plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
-    #  Todo:
-    #   * Better estimate of initial fit parameters - use the half slope idea to make better initial guesses
+    #  Ideas:
+    #   * Better estimate of initial fit parameters - use the half slope idea to make better initial guesses (see experimental_branch folder on laptop)
 
     input_string = f"\nPlease specify your next action: \n\n    'p': plot best fit for all resonances\n"
     populated_thresholds = set([res.threshold for res in Resonance.resonances])
