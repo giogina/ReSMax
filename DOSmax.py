@@ -66,7 +66,6 @@ import re
 from DOSpeak import DOSpeak
 from data_parser import parse, project_directory
 import plot
-from plot import resonance_summary_grid
 from resonance import find_resonances, Resonance
 
 
@@ -478,7 +477,7 @@ def main(file):
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
 
-    
+    print("Fitting DOS...")
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None]) # governs check loop and resonances.txt output cutoff!
@@ -492,7 +491,7 @@ def main(file):
 
         if i > 0 and threshold <= max_thr:
             print(f"Plotting resonance overview for threshold {threshold}...")
-            plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
 
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
@@ -502,7 +501,9 @@ def main(file):
                           f"    'iRj': For resonance #i, select the peak of root #j\n"  # todo: add new resonance using "new [13R4 15R5]" ?
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
-                          f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()
+                          f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n"
+                          f"    'close': Close image viewer\n"
+                               ).strip()
                 if action.lower() == "ok" or action.lower() == "next":
                     i = i + 1
                     break
@@ -516,7 +517,7 @@ def main(file):
                     break
                 elif action.lower().startswith("grid"):
                     _, n = action.split()
-                    resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
+                    plot.resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
                 elif action.startswith("plot"):
                     try:
                         _, emin, emax = action.split()
@@ -524,9 +525,11 @@ def main(file):
                         resonance_overview_range.sort()
                         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
 
-                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
                     except ValueError:
                         print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
+                elif action.lower() == "close":
+                    plot.close_files(project_directory(file))
                 else:
                     changes = re.findall(r'(\d+)R(\d+)?', action)
                     if not len(changes):
@@ -551,7 +554,7 @@ def main(file):
                                     res.best_fit = None
                                     changed_thresholds.append(res.threshold)
                     if i > 0 and threshold in changed_thresholds: # redo overview plot
-                        plot.plot_resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Todo:

@@ -4,6 +4,7 @@ import platform
 
 import matplotlib.pyplot as plt
 import numpy as np
+import psutil
 from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import ScalarFormatter
@@ -117,23 +118,38 @@ def open_file(file, opened_files = None):
     # (opened_files is not a useful list due to xdg-open automatically choosing a software. Could track pid's, but that's too complicated.)
     if platform.system() == 'Windows':
         os.startfile(file)
+        # subprocess.Popen(["start", "", file], shell=True, creationflags=0x00000008, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif platform.system() == 'Darwin':  # macOS
         subprocess.call(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)  # .call necessary for .txt?
+        # subprocess.Popen(["open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['open', file])
     else:  # Linux and other Unix-like
         subprocess.call(('xdg-open', file), stderr=subprocess.DEVNULL)
+        # subprocess.Popen(["xdg-open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['xdg-open', file])
     # if opened_files is not None:
     #     opened_files.append(proc)  # Store process reference
 
-# def close_files(opened_files):
-#     for proc in opened_files:
-#         if isinstance(proc, subprocess.Popen):
-#             try:
-#                 proc.terminate()
-#             except Exception as e:
-#                 pass
-#     opened_files.clear()
+
+def close_files(output_path):
+    own_pids = []
+
+    for proc in psutil.process_iter(["pid", "cmdline"]):
+        try:
+            cmdline = proc.info["cmdline"]
+            if cmdline and any(output_path in arg for arg in cmdline):
+                own_pids.append(proc.info["pid"])
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    if not len(own_pids):
+        print("Image viewer process could not be identified. This only works if the viewer has been started by the current script.")
+    for pid in own_pids:
+        try:
+            proc = psutil.Process(pid)
+            proc.terminate()
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+
 
 def threshold_dir(project_dir, threshold):
     sep = '\\' if '\\' in project_dir else '/'
@@ -324,7 +340,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
     open_file(output_file)
 
 
-def plot_resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files):
+def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files):
     """
     Plot the partitioned sections of each root based on fitted peaks.
 
