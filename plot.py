@@ -1,11 +1,9 @@
 import os
 import subprocess
 import platform
-from io import open_code
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import cm
 from matplotlib.colors import Normalize
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import ScalarFormatter

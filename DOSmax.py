@@ -1,22 +1,73 @@
-import re
+import sys
+import os
+import subprocess
+import importlib.util
+import importlib.metadata
+
+verbose = False
+
+def install_requirements():
+    """Ensure all required dependencies are installed."""
+
+    # Check if running as a frozen .exe
+    if getattr(sys, 'frozen', False):
+        return
+
+    # Check for requirements.txt
+    req_file = "requirements.txt"
+    if not os.path.exists(req_file):
+        print("No requirements.txt found. Skipping dependency check.")
+        return
+
+    # Read required packages (ignore version specifiers for easier installation)
+    with open(req_file, "r") as f:
+        required = [line.strip().split("==")[0] for line in f if line.strip()]
+
+    # Get installed packages
+    installed = {pkg.metadata["Name"].lower() for pkg in importlib.metadata.distributions()}
+    missing = [pkg for pkg in required if pkg.lower() not in installed]
+
+    # Install missing dependencies
+    if missing:
+        print(f"Installing missing dependencies: {', '.join(missing)}, please wait...")
+
+        try:
+            # Skip upgrade if pip is at least 22.0 (or another threshold you choose)
+            current_version = importlib.metadata.version("pip")
+            if tuple(map(int, current_version.split("."))) < (22, 0):
+                print("Upgrading pip...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+            import pip
+
+        except ImportError:
+            print("pip is not installed. Attempting to install pip...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "ensurepip"])
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+                import pip  # Try importing again after installation
+            except Exception as e:
+                print(f"Failed to install pip: {e}")
+                return
+
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            print("All required packages installed successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error installing packages: {e}")
+
+install_requirements()
 
 from scipy import signal
 import argparse
 import numpy as np
 from scipy.signal import argrelextrema
-
-import concurrent.futures
-import threading
-import os
-import subprocess
+import re
 
 from DOSpeak import DOSpeak
 from data_parser import parse, project_directory
 import plot
 from plot import resonance_summary_grid
 from resonance import find_resonances, Resonance
-
-verbose = False
 
 
 def computeDOS(data):
@@ -448,7 +499,7 @@ def main(file):
                           f"    'ok': Accept & proceed to next threshold\n"
                         + (f"    'back': Return to previous threshold\n" if (i>1) else "") +  # todo: test the pid image closing after all?
                           f"    'end': Skip remaining thresholds & print results\n"
-                          f"    'iRj': For resonance #i, select the peak of root #j\n"  # todo: add new resonance using Rj ?
+                          f"    'iRj': For resonance #i, select the peak of root #j\n"  # todo: add new resonance using "new [13R4 15R5]" ?
                           f"    'iR': De-select resonance #i\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n").strip()
