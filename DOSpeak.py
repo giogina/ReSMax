@@ -192,9 +192,9 @@ class DOSpeak:
         except Exception as e:
             if verbose:
                 print(f"Root {self.root}: Fit failed for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
-            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20: # TODO: Is this responsible for truncated peaks?
-                if verbose: print("Retrying...")  # todo: also retry above?
-                self.approx_peak_E -= 0.0001  # todo: less arbitrary steps
+            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
+                if verbose: print("Retrying...")
+                self.approx_peak_E -= 0.0001
                 self.approx_peak_rho -= 0.0001 * (self.dos_array[2] - self.dos_array[1])/(self.energy_array[2] - self.energy_array[1])
             if self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
                 return self.fit_lorentzian()

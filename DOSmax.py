@@ -166,7 +166,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
                         gammas = gamma_array[v:v2]
                         rhos = dos_array[v:v2]
                         dp = DOSpeak(energies, rhos, gammas, root, peak_E, peak_rho)
-                        dp.fit_lorentzian()  # todo: use the half slope idea to make better initial guesses
+                        dp.fit_lorentzian()
                         if dp.fit_E is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
                             fitted_peaks_by_root[root].append(dp)
 
@@ -562,8 +562,7 @@ def main(file):
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Todo:
-    #   * implement toghether-fitting of double peaks
-    #   * Better estimate of initial fit parameters
+    #   * Better estimate of initial fit parameters - use the half slope idea to make better initial guesses
 
     input_string = f"\nPlease specify your next action: \n\n    'p': plot best fit for all resonances\n"
     populated_thresholds = set([res.threshold for res in Resonance.resonances])
