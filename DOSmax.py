@@ -497,6 +497,7 @@ def main(file):
         if i > 0 and threshold <= max_thr:
             print(f"Plotting resonance overview for threshold {threshold}...")
             plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+            manual_range = False
 
             while True:
                 action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
@@ -529,8 +530,8 @@ def main(file):
                         resonance_overview_range = [float(emin), float(emax)]
                         resonance_overview_range.sort()
                         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
-
-                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+                        manual_range = True
+                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
                     except ValueError:
                         print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
                 elif action.lower() == "close":
@@ -559,7 +560,7 @@ def main(file):
                                     res.best_fit = None
                                     changed_thresholds.append(res.threshold)
                     if i > 0 and threshold in changed_thresholds: # redo overview plot
-                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Ideas:

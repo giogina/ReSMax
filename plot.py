@@ -340,7 +340,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
     open_file(output_file)
 
 
-def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files):
+def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files, manual_range = False):
     """
     Plot the partitioned sections of each root based on fitted peaks.
 
@@ -351,7 +351,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     """
     res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
     res_thr.sort(key=lambda r: r.energy)
-    emin = max(res_thr[0].best_fit.fit_E - 10 * res_thr[0].best_fit.fit_Gamma, emin)
+    if not manual_range:
+        emin = max(res_thr[0].best_fit.fit_E - 10 * res_thr[0].best_fit.fit_Gamma, emin)
 
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
