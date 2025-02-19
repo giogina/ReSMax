@@ -2,6 +2,7 @@ import math
 import numpy as np
 import warnings
 from scipy import optimize
+from scipy.signal import argrelextrema
 
 verbose = False
 
@@ -30,7 +31,7 @@ class DOSpeak:
     """
     discontinuity_treatment = "fit"
 
-    def __init__(self, energy, rho, gamma, root: int, peak_E, peak_rho):
+    def __init__(self, energy, rho, gamma, root: int):
         """
         Initialize the DOSpeak object.
 
@@ -43,11 +44,12 @@ class DOSpeak:
         """
 
         self.root = root
-        self.approx_peak_E = peak_E
-        self.approx_peak_rho = peak_rho
+        self.is_descending = (min(rho) < 0)
+        peak_i = rho.argmax() if not self.is_descending else argrelextrema(energy, np.less)[0][0] if len(argrelextrema(energy, np.less)[0]) > 0 else 0
+        self.approx_peak_E = float(energy[peak_i])
+        self.approx_peak_rho = float(rho[peak_i])
         self.approx_y0 = min(rho) / 2
         self.approx_Gamma = None
-        self.is_descending = (min(rho) < 0)
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
         # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
@@ -58,7 +60,7 @@ class DOSpeak:
         self.fit_Gamma = None
         self.fit_A = None
         self.fit_y0 = None
-        self.fit_gamma = None
+        self.fit_gamma = float(gamma[peak_i])
         self.ssr = None
         self.rel_ssr_per_point = None
         self.trim_left = 0
@@ -178,6 +180,9 @@ class DOSpeak:
         Returns:
         list: Optimized parameters [y0, A, Gamma, Er] or None if the fit failed.
         """
+        if self.is_descending:
+            self.rel_ssr_per_point = 10**6  # large value for fit quality
+            return None
         if self.deriv_ratio < 0.3:
             if verbose:
                 print(f"Root {self.root}: Peak at E={self.approx_peak_E}, rho={self.approx_peak_rho} is too asymmetrical to bother fitting.")
@@ -257,7 +262,7 @@ class DOSpeak:
         self.energy_array = self.energy_array[valid_indices]
         self.gamma_array = self.gamma_array[valid_indices]
 
-        # ✅ Trim DOS array consistently (it has one fewer point)
+        # Trim DOS array consistently (it has one fewer point)
         if len(self.dos_array) > trim_front + trim_back:
             self.dos_array = self.dos_array[trim_front:-trim_back] if trim_back > 0 else self.dos_array[trim_front:]
         else:
@@ -275,6 +280,8 @@ class DOSpeak:
         Returns:
         float: The ratio of |min_derivative| to |max_derivative| for DOS vs. energy.
         """
+        if self.is_descending:
+            return 0
         max_index = np.argmax(self.dos_array)
         if max_index < 3 or max_index > len(self.dos_array) - 4:
             return 0  # If too few points are available on one side, return 0.
