@@ -48,7 +48,7 @@ def peak_fit(dos_peak, file):
     """
     x_data = dos_peak.energy_array
     y_data = dos_peak.dos_array
-    xmin, xmax = dos_peak.fit_E-8*dos_peak.fit_Gamma, dos_peak.fit_E+8*dos_peak.fit_Gamma
+    xmin, xmax = dos_peak.energy()-8*dos_peak.fit_Gamma, dos_peak.energy()+8*dos_peak.fit_Gamma
     x_smooth = np.linspace(xmin, xmax, 1000)
     y_smooth = dos_peak.get_smooth_lorentzian_curve(x_smooth)
     plt.figure(figsize=(12, 8))
@@ -218,12 +218,12 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             x_smooth = np.linspace(min(x_data), max(x_data), 1000)
             y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
 
-            log_rel_ssr = -np.log10(peak.rel_ssr_per_point)
+            log_rel_ssr = -np.log10(max(peak.rel_ssr_per_point, 0) + 1)
             fit_color = cmap(norm(log_rel_ssr))
 
             ax.scatter(x_data, y_data, edgecolor=get_root_color(peak.root), facecolor='white')
             ax.plot(x_smooth, y_smooth, color=fit_color)
-            ax.set_title(f"Root {peak.root}, E = {peak.fit_E:.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
+            ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
             ax.set_xlabel("Energy (a.u.)")
             ax.set_ylabel("DOS")
             ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
@@ -233,7 +233,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
                 annotation = "<Selected>"
                 ax.text(0.5, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='center')
 
-                # fit_text = (f"E = {peak.fit_E:.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
+                # fit_text = (f"E = {peak.energy():.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
             #             f"A = {peak.fit_A:.6f}\ny0 = {peak.fit_y0:.6f}\n"
             #             f"Rel SSR = {peak.rel_ssr_per_point:.3e}\n")
             # if len(peak.slope_energies):
@@ -352,7 +352,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
     res_thr.sort(key=lambda r: r.energy)
     if not manual_range:
-        emin = max(res_thr[0].best_fit.fit_E - 10 * res_thr[0].best_fit.fit_Gamma, emin)
+        emin = max(res_thr[0].best_fit.energy() - 10 * res_thr[0].best_fit.fit_Gamma, emin)
+    print(emin, emax, output_file)
 
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
@@ -370,8 +371,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             for peak in res.peaks:
                 ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
                 vertical_offset = 0.0016 * (emax-emin)
-                if emin < peak.fit_E+vertical_offset < emax:
-                    ax1.text(peak.fit_gamma, peak.fit_E + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black', fontweight="bold" if peak==res.best_fit else "normal")
+                if emin < peak.energy()+vertical_offset < emax:
+                    ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black', fontweight="bold" if peak==res.best_fit else "normal")
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
@@ -385,7 +386,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             root = int(key[4:])
             rho = data[key]
             energy = data[root][1:-1]
-            ax2.scatter(energy, np.log10(rho + 1), color="gray", alpha=0.5, s=5, transform=rotation + ax2.transData)
+
+            ax2.scatter(energy, np.log10(np.clip(rho, 0, None) + 1), color="gray", alpha=0.5, s=5, transform=rotation + ax2.transData)
 
     ax1.set_xlabel("gamma")
     ax2.set_xlabel("log(DOS)")
@@ -425,8 +427,8 @@ def plot_partitions(data, fitted_peaks_by_root, output_file, points):
             # vertical_offset = -0.0015 if peak.is_left_half else 0.0015
             # plt.text(
             #     peak.fit_gamma,  # X-coordinate
-            #     peak.fit_E + vertical_offset,  # Y-coordinate with offset
-            #     # f"E={peak.fit_E:.3f}\nρ={peak.fit_Gamma:.3f}\n{peak.fit_A:.3f}, {peak.fit_y0:.3f}",  # Annotation text
+            #     peak.energy() + vertical_offset,  # Y-coordinate with offset
+            #     # f"E={peak.energy():.3f}\nρ={peak.fit_Gamma:.3f}\n{peak.fit_A:.3f}, {peak.fit_y0:.3f}",  # Annotation text
             #     # f"{peak.fit_Gamma:.1e}, {peak.fit_y0:.3f}, {peak.max_dos:.3f}",  # Annotation text
             #     f"{peak.root}",  # Annotation text
             #     fontsize=8,
