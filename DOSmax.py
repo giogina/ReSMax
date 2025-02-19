@@ -86,8 +86,8 @@ def computeDOS(data):
     num = data["gamma"][2:] - data["gamma"][:-2]  # This seems unnecessarily inaccurate. Why not i to i+1, with E in the middle?
     for root in roots:
         if type(root) is int:
-            den = np.abs(data[root][2:] - data[root][:-2])
-            data[f"rho_{root}"] = np.abs(num / den) if 0 not in list(den) else np.zeros(len(num))
+            den = data[root][2:] - data[root][:-2]
+            data[f"rho_{root}"] = (num / den) if 0 not in list(den) else np.zeros(len(num))
     return data
 
 
@@ -139,63 +139,41 @@ def fitDOS(data, energy_range, thresholds, project_dir):
             min_E = min(energy_array) if energy_range[0] is None else energy_range[0]  # TODO: Only exclude sections with a local minimum, not to throw out too many?
             max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
             local_mins = signal.find_peaks(-energy_array)
-            min_i = 0 if len(local_mins[0]) == 0 else max(local_mins[0])+3
+            min_i = 0 # if len(local_mins[0]) == 0 else max(local_mins[0])+3
             if len(local_mins[0]) and (20 <= root <= 21):
                 print(f"new min due to local energy minima at: {local_mins}, {[[[j for j in range(-24, 24)], [float(energy_array[i+j]) for j in range(-24, 24)]] for i in local_mins[0]]}")
-                print([float(gamma_array[i]) for i in range(220,320)])
-                print([float(energy_array[i]) for i in range(220,320)])
+                print([float(dos_array[i]) for i in range(220,320)])
             included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and min_i <= i]
+            if not len(included_indices):
+                continue
             energy_array = np.array([energy_array[i] for i in included_indices])
             gamma_array = np.array([gamma_array[i] for i in included_indices])
             dos_array = np.array([dos_array[i] for i in included_indices])
 
-        if (20 <= root <= 24):
-            print(f"Energy from: {min(energy_array)}")
-            print(f"Energy range: {energy_range}; min_E = {min_E}, max_E = {max_E}")
-        peaks, _ = signal.find_peaks(dos_array)
-        valleys, _ = signal.find_peaks(-dos_array)
-        if (20 <= root <= 24):
-            print(f"Peaks: {peaks}")
-            print(f"Valleys: {valleys}")
-        if len(peaks) == 0:
-            continue
-        if len(valleys) == 0 or valleys[0] > peaks[0]:
-            valleys = np.concatenate([np.array([0]), valleys])
-        if len(valleys) == 0 or valleys[-1] < peaks[-1]:
-            valleys = np.concatenate([valleys, np.array([len(dos_array) - 1])])
+        # peaks, _ = signal.find_peaks(dos_array)
+        valley_indices, _ = signal.find_peaks(-dos_array)
 
-        if len(valleys) and len(peaks):
-            ip = 0
-            for iv in range(0, len(valleys) - 1):
-                v = valleys[iv]
-                v2 = valleys[iv + 1]
-                p = peaks[ip]
-                while p < v and len(peaks) > ip + 1:
-                    ip += 1
-                    p = peaks[ip]
-                if (20<=root<=24) and (len(energy_array) > v2):
-                    print(root, gamma_array[v], gamma_array[p], gamma_array[v2], "   ", energy_array[v], energy_array[p], energy_array[v2])
-                if v < p < v2:  # successfully identified section
-                    valley_points.append([float(gamma_array[v]), float(energy_array[v])])
-                    peak_E = float(energy_array[p])
-                    peak_rho = float(dos_array[p])
-                    if (20 <= root <= 24):
-                        print("Section!", v2 - v)
-                    if v2 - v >= 10:  # necessary to fit all parameters
-                        energies = energy_array[v:v2]
-                        gammas = gamma_array[v:v2]
-                        rhos = dos_array[v:v2]
-                        dp = DOSpeak(energies, rhos, gammas, root, peak_E, peak_rho)
-                        dp.fit_lorentzian()
-                        if (20 <= root <= 24):
-                            print(dp.fit_E, dp.warning)
-                            # if dp.fit_E is None:
-                            #     print(dp.gamma_array)
-                            #     print(dp.energy_array)
-                        if dp.fit_E is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
-                            fitted_peaks_by_root[root].append(dp)
+        valley_indices = [i for i in valley_indices if dos_array[i] >= 0]  # only cut on steep ascends, not in the middle of descending pieces.
+        if len(valley_indices) < 2 or dos_array[1] > dos_array[0]:
+            valley_indices = np.concatenate([np.array([0]), valley_indices])
+        if len(valley_indices) < 2 or dos_array[-2] > dos_array[-1]:
+            valley_indices = np.concatenate([valley_indices, np.array([len(dos_array) - 1])])
 
-    plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)
+        for iv in range(0, len(valley_indices) - 1):
+            v = int(valley_indices[iv])
+            v2 = int(valley_indices[iv+1])
+            valley_points.append([float(gamma_array[v]), float(energy_array[v])])
+            energies = energy_array[v:v2]
+            gammas = gamma_array[v:v2]
+            rhos = dos_array[v:v2]
+
+            if len(rhos):
+                dp = DOSpeak(energies, rhos, gammas, root)  # descending sections can be added; for these, rel_ssr_per_point = 10**6, energy() = min(energies)
+                dp.fit_lorentzian()
+                if dp.energy() is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
+                    fitted_peaks_by_root[root].append(dp)
+
+    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)
     print("Finding resonances...")
     find_resonances(fitted_peaks_by_root)
     for res in Resonance.resonances:
@@ -401,6 +379,10 @@ def last_local_minimum(energy):
         return highest_local_min_index + 3
     return 0
 
+# TODO: Test all modes for bugs (with peak.xyz values being None due to being is_descending)
+#  * Mark the descending nature in the output - both resonance overview and .txt (instead of ssr / fit parameters)
+#  * Only accept resonances if they have enough entries / one non-descending entry?
+
 
 def main(file):
     """
@@ -428,7 +410,7 @@ def main(file):
                 thresholds = [max_e]  # dummy value in case no thresholds are entered
             redo_overview = False
             print(f"\nγ vs E overview graph has been plotted to {plot_file}.")
-        next_action = input(f"Please specify your next action: \n\n"
+        next_action = input(f"Please specify your next action: \n\n"  # TODO: Maybe save last input, allow arrow-up to insert it?
                             "    'o': Plot gamma vs E overview graph (full energy range).\n"
                             "    'o E_min E_max': Re-plot gamma vs E overview graph (specified energy range).\n"
                             "    'r': Fit density of state over the currently displayed range ({'-∞' if low is None else low}..{high})\n"
@@ -575,7 +557,7 @@ def main(file):
                                     root_peaks = [p for p in res.peaks if p.root == int(change[1])]
                                     if len(root_peaks):
                                         res.best_fit = root_peaks[0]
-                                        res.energy = root_peaks[0].fit_E
+                                        res.energy = root_peaks[0].energy()
                                         changed_thresholds.append(res.threshold)
                                     else:
                                         print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
