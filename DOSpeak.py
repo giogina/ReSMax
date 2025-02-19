@@ -47,6 +47,7 @@ class DOSpeak:
         self.approx_peak_rho = peak_rho
         self.approx_y0 = min(rho) / 2
         self.approx_Gamma = None
+        self.is_descending = (min(rho) < 0)
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
         # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
@@ -65,12 +66,10 @@ class DOSpeak:
         self.using_pointwise_energy = False
         self.nr_fit_attempts = 0
         self.energy_below, self.energy_above = None, None  # fit_E needs to fall between these
-        self.is_descending = False
         self.warning = None
 
     def trim(self, energy, rho, gamma):
-        if min(rho) < 0:
-            self.is_descending = True
+        if self.is_descending:
             return energy, rho, gamma  # this is a descending piece
         highest_i = np.argmax(rho)
         left_energy = energy[:highest_i+1]
@@ -381,5 +380,7 @@ class DOSpeak:
         return True
 
     def energy(self):
+        if self.is_descending:
+            return self.approx_peak_E
         return self.fit_E
             
