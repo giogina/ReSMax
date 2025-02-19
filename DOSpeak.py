@@ -65,9 +65,13 @@ class DOSpeak:
         self.using_pointwise_energy = False
         self.nr_fit_attempts = 0
         self.energy_below, self.energy_above = None, None  # fit_E needs to fall between these
+        self.is_descending = False
         self.warning = None
 
     def trim(self, energy, rho, gamma):
+        if min(rho) < 0:
+            self.is_descending = True
+            return energy, rho, gamma  # this is a descending piece
         highest_i = np.argmax(rho)
         left_energy = energy[:highest_i+1]
         left_energy_reverse = left_energy[::-1]
