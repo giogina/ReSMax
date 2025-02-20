@@ -187,8 +187,8 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
     Create a grid plot for each resonance, showing all peaks associated with it.
 
     Parameters:
-    project_dir (str): The project directory to save the summary plots.
-    resonances (list): List of Resonance objects containing associated peaks.
+    project_dir (str): The project directory to save the summary plots.      # todo: colour codewords for darker colours (where subsequent ones are more different)
+    resonances (list): List of Resonance objects containing associated peaks.  # todo: either allow emin,emax optional inputs, or determine energy range to only exclude few points but show peaks well.
     """
 
     norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
@@ -215,15 +215,20 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             ax = axs[idx+1]
             x_data = peak.energy_array
             y_data = peak.dos_array
-            x_smooth = np.linspace(min(x_data), max(x_data), 1000)
-            y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
 
-            log_rel_ssr = -np.log10(max(peak.rel_ssr_per_point, 0) + 1)
-            fit_color = cmap(norm(log_rel_ssr))
+            if not peak.is_descending:
+                x_smooth = np.linspace(min(x_data), max(x_data), 1000)
+                y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
+
+                log_rel_ssr = -np.log10(max(peak.rel_ssr_per_point, 0) + 1)
+                fit_color = cmap(norm(log_rel_ssr))
+
+                ax.plot(x_smooth, y_smooth, color=fit_color)
+                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
+            else:
+                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, \n[!] Energy descending with growing gamma [!]", color='red')
 
             ax.scatter(x_data, y_data, edgecolor=get_root_color(peak.root), facecolor='white')
-            ax.plot(x_smooth, y_smooth, color=fit_color)
-            ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
             ax.set_xlabel("Energy (a.u.)")
             ax.set_ylabel("DOS")
             ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
@@ -365,21 +370,25 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             ax1.plot(data["gamma"], data[root], color="gray", alpha=0.2)
 
     for res in resonances:
+        show = res.should_be_shown()
         if emin < res.energy < emax:
-            if res.best_fit is not None:
+            if show is not False:
                 ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
             for peak in res.peaks:
+                annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
                 ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
                 vertical_offset = 0.0016 * (emax-emin)
                 if emin < peak.energy()+vertical_offset < emax:
-                    ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color='black', fontweight="bold" if peak==res.best_fit else "normal")
+                    ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
         if emin < res.energy < emax and res.best_fit is not None:
+            show = res.should_be_shown()
+            annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
             ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
             ax2.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.5)
-            ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8)
+            ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
 
     for key in data.keys():
         if type(key) is str and key.startswith("rho_"):  # Identify DOS arrays
