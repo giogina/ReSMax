@@ -58,6 +58,14 @@ class Resonance:
         if len(above):
             self.threshold = min(above)
 
+    def should_be_shown(self):  # Show this resonance in lists&overview plot?
+        if self.best_fit is None:  # No good fit / manually deselected
+            return False
+        if not self.best_fit.is_descending:  # at least one properly fit section
+            return True
+        if self.best_fit.is_descending and len(self.peaks) >= 3:  # Several descending peaks; show with warning
+            return None
+
 
 def energy_clustering(data, e_min, e_max, resolution):
     """
