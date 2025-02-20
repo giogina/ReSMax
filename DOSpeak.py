@@ -181,7 +181,7 @@ class DOSpeak:
         list: Optimized parameters [y0, A, Gamma, Er] or None if the fit failed.
         """
         if self.is_descending:
-            self.rel_ssr_per_point = 10**6  # large value for fit quality
+            self.rel_ssr_per_point = 10**6 + self.approx_peak_E  # large value for fit quality
             return None
         if self.deriv_ratio < 0.3:
             if verbose:
