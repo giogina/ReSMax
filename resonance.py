@@ -65,6 +65,7 @@ class Resonance:
             return True
         if self.best_fit.is_descending and len(self.peaks) >= 3:  # Several descending peaks; show with warning
             return None
+        return False
 
 
 def energy_clustering(data, e_min, e_max, resolution):

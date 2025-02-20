@@ -377,17 +377,19 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
         if emin < res.energy < emax:
             if show is not False:
                 ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
-            for peak in res.peaks:
-                annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
-                ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
-                vertical_offset = 0.0016 * (emax-emin)
-                if emin < peak.energy()+vertical_offset < emax:
-                    ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
+                for peak in res.peaks:
+                    annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
+                    ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
+                    vertical_offset = 0.0016 * (emax-emin)
+                    if emin < peak.energy()+vertical_offset < emax:
+                        ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
         if emin < res.energy < emax and res.best_fit is not None:
             show = res.should_be_shown()
+            if show is False:
+                continue
             annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
             ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
             ax2.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.5)
