@@ -12,8 +12,12 @@ from matplotlib.transforms import Affine2D
 
 
 def get_root_color(rootnr: int):
-    colors = ["blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan",
-              "navy", "teal", "gold", "lime", "maroon", "yellow", "magenta", "turquoise", "indigo"]
+    colors = ["firebrick", "royalblue", "olive", "teal",
+              "orangered", "mediumblue", "green", "dodgerblue", "darkviolet",
+              "chocolate", "darkslateblue", "seagreen", "steelblue", "purple", "indigo"
+        # "blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan",
+        #       "navy", "teal", "gold", "lime", "maroon", "yellow", "magenta", "turquoise", "indigo"
+              ]
     return colors[rootnr % len(colors)]
 
 
@@ -358,7 +362,6 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     res_thr.sort(key=lambda r: r.energy)
     if not manual_range:
         emin = max(res_thr[0].best_fit.energy() - 10 * res_thr[0].best_fit.fit_Gamma, emin)
-    print(emin, emax, output_file)
 
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
