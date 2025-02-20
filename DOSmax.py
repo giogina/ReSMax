@@ -116,8 +116,6 @@ def fitDOS(data, energy_range, thresholds, project_dir):
         root = int(key[4:])
         energy_array = data[root][1:-1]
         gamma_array = data["gamma"][1:-1]
-        if (20 <= root <= 24):
-            print(f"\n\n======================  {root}  ======================\n")
         dos_array = data[key]
         fitted_peaks_by_root[root] = []
         fitted_half_peaks_by_root[root] = []
@@ -133,27 +131,19 @@ def fitDOS(data, energy_range, thresholds, project_dir):
                 print(f"MBS: {mbs_string}")
                 with open(result_file, 'a') as save_file:
                     save_file.write(f"{mbs_string}\r\n")
-        if (20 <= root <= 24):
-            print(f"Energy from: {min(energy_array)}")
         if energy_range != (None, None):
-            min_E = min(energy_array) if energy_range[0] is None else energy_range[0]  # TODO: Only exclude sections with a local minimum, not to throw out too many?
+            min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
             max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
-            local_mins = signal.find_peaks(-energy_array)
-            min_i = 0 # if len(local_mins[0]) == 0 else max(local_mins[0])+3
-            if len(local_mins[0]) and (20 <= root <= 21):
-                print(f"new min due to local energy minima at: {local_mins}, {[[[j for j in range(-24, 24)], [float(energy_array[i+j]) for j in range(-24, 24)]] for i in local_mins[0]]}")
-                print([float(dos_array[i]) for i in range(220,320)])
-            included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and min_i <= i]
+            included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and 0 <= i]
             if not len(included_indices):
                 continue
             energy_array = np.array([energy_array[i] for i in included_indices])
             gamma_array = np.array([gamma_array[i] for i in included_indices])
             dos_array = np.array([dos_array[i] for i in included_indices])
 
-        # peaks, _ = signal.find_peaks(dos_array)
         valley_indices, _ = signal.find_peaks(-dos_array)
 
-        valley_indices = [i for i in valley_indices if dos_array[i] >= 0]  # only cut on steep ascends, not in the middle of descending pieces.
+        valley_indices = [i for i in valley_indices if dos_array[i] >= 0]  # only cut on ascends, not in the middle of descending pieces.
         if len(valley_indices) < 2 or dos_array[1] > dos_array[0]:
             valley_indices = np.concatenate([np.array([0]), valley_indices])
         if len(valley_indices) < 2 or dos_array[-2] > dos_array[-1]:
@@ -515,57 +505,60 @@ def main(file):
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n"
                           f"    'close': Close image viewer\n"
                                ).strip()
-                if action.lower() == "ok" or action.lower() == "next":
-                    i = i + 1
-                    break
-                elif action.lower() == "back" or action.lower().startswith("prev"):
-                    if i > 1:
-                        i = i - 1
-                    break
-                elif action.lower() == "end":
-                    max_thr = threshold
-                    i = i + 1
-                    break
-                elif action.lower().startswith("grid"):
-                    _, n = action.split()
-                    plot.resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
-                elif action.startswith("plot"):
-                    try:
-                        _, emin, emax = action.split()
-                        resonance_overview_range = [float(emin), float(emax)]
-                        resonance_overview_range.sort()
-                        overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
-                        manual_range = True
-                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
-                    except ValueError:
-                        print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
-                elif action.lower() == "close":
-                    plot.close_files(project_directory(file))
-                else:
-                    changes = re.findall(r'(\d+)R(\d+)?', action)
-                    if not len(changes):
-                        print("Invalid input.")
-                    changed_thresholds = []
-                    for change in changes:
-                        res_index = int(change[0])
-                        if res_index < len(Resonance.resonances):
-                            res = Resonance.resonances[res_index]
-                            if not res.threshold == threshold:
-                                print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
-                            else:
-                                if change[1]:
-                                    root_peaks = [p for p in res.peaks if p.root == int(change[1])]
-                                    if len(root_peaks):
-                                        res.best_fit = root_peaks[0]
-                                        res.energy = root_peaks[0].energy()
-                                        changed_thresholds.append(res.threshold)
-                                    else:
-                                        print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
+                try:
+                    if action.lower() == "ok" or action.lower() == "next":
+                        i = i + 1
+                        break
+                    elif action.lower() == "back" or action.lower().startswith("prev"):
+                        if i > 1:
+                            i = i - 1
+                        break
+                    elif action.lower() == "end":
+                        max_thr = threshold
+                        i = i + 1
+                        break
+                    elif action.lower().startswith("grid"):
+                        _, n = action.split()
+                        plot.resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
+                    elif action.startswith("plot"):
+                        try:
+                            _, emin, emax = action.split()
+                            resonance_overview_range = [float(emin), float(emax)]
+                            resonance_overview_range.sort()
+                            overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
+                            manual_range = True
+                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
+                        except ValueError:
+                            print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
+                    elif action.lower() == "close":
+                        plot.close_files(project_directory(file))
+                    else:
+                        changes = re.findall(r'(\d+)R(\d+)?', action)
+                        if not len(changes):
+                            print("Invalid input.")
+                        changed_thresholds = []
+                        for change in changes:
+                            res_index = int(change[0])
+                            if res_index < len(Resonance.resonances):
+                                res = Resonance.resonances[res_index]
+                                if not res.threshold == threshold:
+                                    print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
                                 else:
-                                    res.best_fit = None
-                                    changed_thresholds.append(res.threshold)
-                    if i > 0 and threshold in changed_thresholds: # redo overview plot
-                        plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
+                                    if change[1]:
+                                        root_peaks = [p for p in res.peaks if p.root == int(change[1])]
+                                        if len(root_peaks):
+                                            res.best_fit = root_peaks[0]
+                                            res.energy = root_peaks[0].energy()
+                                            changed_thresholds.append(res.threshold)
+                                        else:
+                                            print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
+                                    else:
+                                        res.best_fit = None
+                                        changed_thresholds.append(res.threshold)
+                        if i > 0 and threshold in changed_thresholds: # redo overview plot
+                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
+                except Exception as e:
+                    print(f"Invalid input: {e}")
 
     print_result_file(max_thr, project_directory(file) + "resonances.txt")
     #  Ideas:
@@ -580,18 +573,21 @@ def main(file):
     input_string += "    'x': exit\n"
     while True:
         action = input(input_string)
-        if action.lower() == 'p':
-            plot.resonance_fits(project_directory(file), Resonance.resonances)
-            break
-        elif action.lower() in [f'p{i}' for i, t in enumerate(thresholds)]:
-            i = int(action[1:])
-            plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
-        elif action.lower().startswith('c'):
-            plot.close_files(project_directory(file))
-        elif action.lower() == 'x':
-            break
-        else:
-            print("Invalid input.")
+        try:
+            if action.lower() == 'p':
+                plot.resonance_fits(project_directory(file), Resonance.resonances)
+                break
+            elif action.lower() in [f'p{i}' for i, t in enumerate(thresholds)]:
+                i = int(action[1:])
+                plot.resonance_fits(project_directory(file), Resonance.resonances, thresholds[i])
+            elif action.lower().startswith('c'):
+                plot.close_files(project_directory(file))
+            elif action.lower() == 'x':
+                break
+            else:
+                print("Invalid input.")
+        except Exception as e:
+            print(f"Invalid input: {e}")
 
 
 if __name__ == "__main__":
