@@ -68,7 +68,7 @@ def peak_fit(dos_peak, file):
         plot_data_file.write(np.array2string(y_smooth, separator=" ", max_line_width=np.inf) + "\r\n")
 
 
-def overview(data, plot_file, from_e=None, to_e=None):
+def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     """
     Plot an overview of gamma vs energy and save the plot.
 
@@ -98,7 +98,7 @@ def overview(data, plot_file, from_e=None, to_e=None):
 
     plt.xlabel("γ")
     plt.ylabel("Energy (a.u.)")
-    plt.ylim(bottom=min_E - 0.03, top=max_E + 0.03)
+    plt.ylim(bottom=min_E - margin, top=max_E + margin)
     # plt.ylim(bottom=min_E - 0.0, top=max_E + 0.0)
     # plt.ylim(bottom=-0.38, top=-0.22)
     plt.locator_params(axis='x', nbins=20)

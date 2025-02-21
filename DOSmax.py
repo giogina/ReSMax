@@ -175,6 +175,9 @@ def print_result_file(max_threshold, result_file):
     current_threshold = None
     with open(result_file, 'a') as save_file:
         for res in Resonance.resonances:
+            show = res.should_be_shown()
+            if show is False:
+                continue
             if res.threshold != current_threshold:
                 current_threshold = res.threshold
                 if current_threshold > max_threshold:
@@ -182,7 +185,7 @@ def print_result_file(max_threshold, result_file):
                 print(f"\nResonances found below threshold E = {current_threshold}:")
                 save_file.write(f"\r\nResonances found below threshold {current_threshold}:\r\n")
                 save_file.write(f"Energy       \t   Root\tgamma              \tSSR                \tRel. SSR per point\tGamma              \tA                 \ty0                \tOther roots\r\n")
-            if res.best_fit is not None:
+            if show:
                 print(f"{res.energy}, Root {res.best_fit.root}, SSR {res.best_fit.ssr}, Rel. SSR per point {res.best_fit.rel_ssr_per_point}, gamma = {res.best_fit.fit_gamma}, Gamma = {res.best_fit.fit_Gamma}, A = {res.best_fit.fit_A}, y0 = {res.best_fit.fit_y0}, Other roots = {[p.root for p in res.peaks]}")
                 save_file.write(
                     f"{res.energy:.15f}".ljust(18, '0') + "\t" +
@@ -194,8 +197,19 @@ def print_result_file(max_threshold, result_file):
                     f"{res.best_fit.fit_A:.15f}".ljust(18, '0') + "\t" +
                     f"{res.best_fit.fit_y0:.15f}".ljust(18, ' ') + "\t" +
                     f"{[p.root for p in res.peaks]} \t" +
-                    f"{'[!] '+res.best_fit.warning if res.best_fit.warning is not None else ''}"
-                    +"\r\n"
+                    f"{'[!] '+res.best_fit.warning if res.best_fit.warning is not None else ''}" +
+                    "\r\n"
+                )
+            elif show is None:  # descending section
+                print(
+                    f"{res.energy}, Root {res.best_fit.root}  [!] Descending section; DOS peak could not be fitted. [!]  Other roots = {[p.root for p in res.peaks]}")
+                save_file.write(
+                    f"{res.energy:.15f}".ljust(18, '0') + "\t" +
+                    f"{res.best_fit.root}\t" +
+                    f"{res.best_fit.fit_gamma:.15f}".ljust(18, '0') + "\t" +
+                    f"\t[!] Descending section; DOS peak could not be fitted. [!]\t\t\t\t" +
+                    f"{[p.root for p in res.peaks]} \t" +
+                    "\r\n"
                 )
 
         save_file.write("\r\n\r\n\r\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n\r\n  Detailed data on all DOS peak fits:  \r\n\r\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n\r\n")
@@ -206,21 +220,34 @@ def print_result_file(max_threshold, result_file):
             if res.threshold != current_threshold:
                 current_threshold = res.threshold
             for peak in sorted(res.peaks, key=lambda p1: p1.root):
-                save_file.write( " " +
-                    f"{current_threshold:.3f}".ljust(10, ' ') + "\t" + (" x" if res.best_fit is not None and res.best_fit.root == peak.root else "  ") + "    \t" +
-                    f"{res.energy:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.pointwise_energy:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.fit_E:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.root}\t" +
-                    f"{peak.fit_gamma:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.ssr:.15f}".ljust(18, '0')[:18] + "\t" +
-                    f"{peak.rel_ssr_per_point:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.fit_Gamma:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.fit_A:.15f}".ljust(18, '0') + "\t" +
-                    f"{peak.fit_y0:.15f}".ljust(21, ' ') + "\t" +
-                    f"{'[!] ' + peak.warning if peak.warning is not None else ''}"
-                    + "\r\n"
-                )
+                if peak.is_descending:
+                    save_file.write(" " +
+                        f"{current_threshold:.3f}".ljust(10, ' ') + "\t" + (
+                            " x" if res.best_fit is not None and res.best_fit.root == peak.root else "  ") + "    \t" +
+                        f"{res.energy:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.approx_peak_E:.15f}".ljust(18, '0') + "\t" +
+                        f"       --- ".ljust(18, ' ') + "\t" +
+                        f"{peak.root}\t" +
+                        f"{peak.fit_gamma:.15f}".ljust(18, '0') + "\t" +
+                        f"\t[!] Energy is descending, therefore there isn't a fitable DOS peak [!]\t" +
+                        "\r\n"
+                    )
+                else:
+                    save_file.write( " " +
+                        f"{current_threshold:.3f}".ljust(10, ' ') + "\t" + (" x" if res.best_fit is not None and res.best_fit.root == peak.root else "  ") + "    \t" +
+                        f"{res.energy:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.pointwise_energy:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.fit_E:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.root}\t" +
+                        f"{peak.fit_gamma:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.ssr:.15f}".ljust(18, '0')[:18] + "\t" +
+                        f"{peak.rel_ssr_per_point:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.fit_Gamma:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.fit_A:.15f}".ljust(18, '0') + "\t" +
+                        f"{peak.fit_y0:.15f}".ljust(21, ' ') + "\t" +
+                        f"{'[!] ' + peak.warning if peak.warning is not None else ''}" +
+                        "\r\n"
+                    )
 
     print(f"\nResults have been written to {result_file}.")
     plot.open_file(result_file)
@@ -370,8 +397,6 @@ def last_local_minimum(energy):
     return 0
 
 # TODO: Test all modes for bugs (with peak.xyz values being None due to being is_descending)
-#  * Mark the descending nature in the output - both resonance overview and .txt (instead of ssr / fit parameters)
-#  * Only accept resonances if they have enough entries / one non-descending entry?
 
 
 def main(file):
@@ -391,10 +416,11 @@ def main(file):
     min_e = None
     max_e = None
     redo_overview = True
+    overview_margin = 0.03
     while action != "r":
         if redo_overview:
             plot_file = project_directory(file) + "overview.png"
-            min_e, max_e = plot.overview(data, plot_file, low, high)
+            min_e, max_e = plot.overview(data, plot_file, low, high, margin=overview_margin)
             data = computeDOS(data)
             if thresholds is None:
                 thresholds = [max_e]  # dummy value in case no thresholds are entered
@@ -464,11 +490,13 @@ def main(file):
                     high = float(response[2])
                     if action == "o":
                         redo_overview = True
+                        overview_margin = 0
                     if action == "p":
                         plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file)[:-1] + f"_dos_panorama_{low}_{high}.png", low, high)
                 elif len(response) == 1 and response[0] == "o":  # reset overview
                     low = None
                     high = 0
+                    overview_margin = 0.03
                     redo_overview = True
                 elif len(response) == 1 and response[0] == "r":  # proceed to DOS fit
                     break
