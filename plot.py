@@ -2,29 +2,18 @@ import gc
 import os
 import subprocess
 import platform
-import time
 
 import numpy as np
 import psutil
-
 from concurrent.futures import ThreadPoolExecutor
 
-from matplotlib.collections import LineCollection
-from matplotlib.figure import Figure
-from matplotlib.font_manager import FontProperties
-from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
-from matplotlib.patches import PathPatch
 from matplotlib.text import Text
-from matplotlib.textpath import TextPath
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.transforms import Affine2D
-from pyparsing import lineEnd
 
-
-# matplotlib.use('Agg')  # faster backend
 
 def get_root_color(rootnr: int, alpha=1.):
     saturation = 1
@@ -136,11 +125,11 @@ def open_file(file, opened_files = None):
         os.startfile(file)
         # subprocess.Popen(["start", "", file], shell=True, creationflags=0x00000008, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif platform.system() == 'Darwin':  # macOS
-        subprocess.run(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)  # .call necessary for .txt?
+        subprocess.call(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)  # .call necessary for .txt?
         # subprocess.Popen(["open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['open', file])
     else:  # Linux and other Unix-like
-        subprocess.run(('xdg-open', file), stderr=subprocess.DEVNULL, check=True)
+        subprocess.call(('xdg-open', file), stderr=subprocess.DEVNULL)
         # subprocess.Popen(["xdg-open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['xdg-open', file])
     # if opened_files is not None:
@@ -203,8 +192,8 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
     Create a grid plot for each resonance, showing all peaks associated with it.
 
     Parameters:
-    project_dir (str): The project directory to save the summary plots.      # todo: colour codewords for darker colours (where subsequent ones are more different)
-    resonances (list): List of Resonance objects containing associated peaks.  # todo: either allow emin,emax optional inputs, or determine energy range to only exclude few points but show peaks well.
+    project_dir (str): The project directory to save the summary plots
+    resonances (list): List of Resonance objects containing associated peaks.
     """
 
     norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
@@ -267,7 +256,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
 
 def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None, clustering_output=None):
     """
-    Plot all fitted peaks of all resonances in a single wide scatter plot (DOS vs. energy).
+    Plot all DOS values in a single wide scatter plot (DOS vs. energy).
 
     Parameters:
     resonances (list): List of Resonance objects containing peaks.
@@ -303,13 +292,12 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
             rho = data[key]#[indices]
             energy = data[root][1:-1]#[indices]  # Corresponding energy array for the root
             color = get_root_color(root)
-            plt.scatter(
+            plt.plot(
                 energy,
                 np.log10(np.clip(rho, 0, None) + 1), #+1*int(key[4:]),
-                # color="gray",
+                '.',
+                markersize=2,
                 color=color,
-                alpha=0.5,
-                s=5,
             )
 
     # for i, resonance in enumerate(resonances):
@@ -476,7 +464,6 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
             ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
 
-    # todo: same for panorama
     ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
 
     for artist in ax1.get_children():
