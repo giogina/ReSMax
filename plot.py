@@ -10,24 +10,30 @@ from concurrent.futures import ThreadPoolExecutor
 
 from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
+from matplotlib.patches import PathPatch
+from matplotlib.text import Text
+from matplotlib.textpath import TextPath
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.transforms import Affine2D
-
+from pyparsing import lineEnd
 
 
 # matplotlib.use('Agg')  # faster backend
 
-def get_root_color(rootnr: int):
+def get_root_color(rootnr: int, alpha=1.):
     saturation = 1
     value = 0.8
     hue = (rootnr * 222.5+15) % 360
     hue /= 360.0
-    return hsv_to_rgb((hue, saturation, value))
-
+    rgb = hsv_to_rgb((hue, saturation, value))
+    if alpha != 1:
+        rgb = (1 - alpha) * np.array([1, 1, 1]) + alpha * rgb
+    return rgb
 
 def plot_DOS(data, root, file, fitted_peaks_by_root=None):
     """
@@ -410,7 +416,6 @@ def prepare_plot_arrays(data, thresholds):
 
     return plot_arrays
 
-clustering_cache = {}
 
 def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files, threshold_above=0, manual_range = False):
     """
@@ -425,52 +430,48 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
 
     plot_arrays = get_plot_arrays()  # prepared arrays trimmed for efficient plotting
 
-    start = time.time()
-
-    cache_key = (emin, emax)
-    res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
+    res_thr = [r for r in resonances if emin <= r.energy <= emax]
     res_thr.sort(key=lambda r: r.energy)
 
     if not manual_range and res_thr:
         best_fit = res_thr[0].best_fit
         emin = max(best_fit.energy() - 10 * best_fit.fit_Gamma, emin)
 
-    end = time.time()
-    print(f"Emin recalc: {end - start}")
-    start = end
-
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
 
-    end = time.time()
-    print(f"Ax setup: {end - start}")
-    start = end
-
     background_lines = plot_arrays["line_data"][threshold_above]
     for gamma_seg, energy_seg in background_lines:
         ax1.plot(gamma_seg, energy_seg, color="lightgray")
 
-    end = time.time()
-    print(f"Gray lines: {end - start}")
-    start = end
-
-    for res in resonances:
+    texts_to_add = []
+    for res in res_thr:
         show = res.should_be_shown()
-        if emin < res.energy < emax:
-            if show is not False:
-                ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
-                for peak in res.peaks:
-                    ax1.plot(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), linewidth=3, alpha=0.2)
-                    annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
-                    vertical_offset = 0.0016 * (emax-emin)
-                    if emin < peak.energy()+vertical_offset < emax:
-                        ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
+        res_gammas = []
+        res_es = []
+        for peak in res.peaks:
+            if len(peak.gamma_array):
+                res_gammas.append(peak.gamma_array)
+                res_gammas.append([np.nan])
+                res_es.append(peak.energy_array)
+                res_es.append([np.nan])
+                annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
+                vertical_offset = 0.0016 * (emax-emin)
+                if emin < peak.energy()+vertical_offset < emax:
+                    # ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
+                    texts_to_add.append(Text(x=peak.fit_gamma, y=peak.energy() + vertical_offset, text=f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal"))
 
-    end = time.time()
-    print(f"resonance sections: {end - start}")
-    start = end
+        res_gamma_all = np.concatenate(res_gammas) if res_gammas else np.array([])
+        res_energy_all = np.concatenate(res_es) if res_es else np.array([])
+        ax1.plot(res_gamma_all, res_energy_all, color=get_root_color(res.index, alpha=0.2), linewidth=3, solid_capstyle="round")
+
+        if show is not False:
+            ax1.plot(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), linewidth=3, solid_capstyle="round")
+
+    for text_obj in texts_to_add:
+        ax1.add_artist(text_obj)
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
@@ -480,20 +481,18 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
                 continue
             annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
             ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
-            ax2.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.5)
+            ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
             ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
-
-
-    end = time.time()
-    print(f"Resonance lines: {end - start}")
-    start = end
 
     # todo: same for panorama
     ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
 
-    end = time.time()
-    print(f"Clustering scatter: {end - start}")
-    start = end
+    for artist in ax1.get_children():
+        if hasattr(artist, 'set_rasterized'):
+            artist.set_rasterized(True)
+    for artist in ax2.get_children():
+        if hasattr(artist, 'set_rasterized'):
+            artist.set_rasterized(True)
 
     ax1.set_xlabel("gamma")
     ax2.set_xlabel("log(DOS)")
@@ -504,18 +503,10 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     ax2.tick_params(left=False, labelleft=False)
     # plt.ioff()  # Turn off interactive mode if accidentally enabled
     plt.subplots_adjust(wspace=0)
+
     plt.savefig(output_file, pil_kwargs={'compress_level': 1})
     plt.close()
-
-    end = time.time()
-    print(f"Savefig: {end - start}")
-    start = end
-
     open_file(output_file, open_files)
-
-    end = time.time()
-    print(f"Open file: {end - start}")
-    start = end
 
 
 # Debug function
