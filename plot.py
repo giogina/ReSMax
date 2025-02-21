@@ -1,3 +1,4 @@
+import gc
 import os
 import subprocess
 import platform
@@ -52,7 +53,7 @@ def plot_DOS(data, root, file, fitted_peaks_by_root=None):
         for peak in fitted_peaks_by_root[root]:
             plt.plot([min(x_data), max(x_data)], [peak.energy(), peak.energy()], 'r-')
     plt.savefig(file)
-    plt.close()
+    plt.close('all')
     open_file(file)
 
 
@@ -76,7 +77,7 @@ def peak_fit(dos_peak, file):
     plt.ylabel("DOS")
     plt.xlim(xmin, xmax)
     plt.savefig(file)
-    plt.close()
+    plt.close('all')
     with open(f"{file[:-5]}.txt", 'w') as plot_data_file:
         plot_data_file.write(np.array2string(x_data, separator=" ", max_line_width=np.inf) + "\r\n")
         plot_data_file.write(np.array2string(y_data, separator=" ", max_line_width=np.inf) + "\r\n")
@@ -117,7 +118,10 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     plt.minorticks_on()
 
     plt.savefig(plot_file)
-    plt.close()
+    plt.clf()  # Clear figure
+    plt.cla()
+    plt.close('all')  # Extra call just in case
+    gc.collect()
     open_file(plot_file)
 
 def open_file(file, opened_files = None):
@@ -132,11 +136,11 @@ def open_file(file, opened_files = None):
         os.startfile(file)
         # subprocess.Popen(["start", "", file], shell=True, creationflags=0x00000008, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif platform.system() == 'Darwin':  # macOS
-        subprocess.call(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)  # .call necessary for .txt?
+        subprocess.run(('open', file), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, check=True)  # .call necessary for .txt?
         # subprocess.Popen(["open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['open', file])
     else:  # Linux and other Unix-like
-        subprocess.call(('xdg-open', file), stderr=subprocess.DEVNULL)
+        subprocess.run(('xdg-open', file), stderr=subprocess.DEVNULL, check=True)
         # subprocess.Popen(["xdg-open", file], preexec_fn=os.setsid, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # proc = subprocess.Popen(['xdg-open', file])
     # if opened_files is not None:
@@ -184,7 +188,7 @@ def resonance_fits(project_dir, resonances, threshold=None):
     """
 
     for res in resonances:
-        if res.best_fit is not None:
+        if res.best_fit is not None and not res.best_fit.is_descending:
             if threshold is None or res.threshold == threshold:
                 th_dir = threshold_dir(project_dir, res.threshold)
                 peak_fit(res.best_fit, f"{th_dir}[{res.index}]{res.energy:.8f}.png")
@@ -218,12 +222,15 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
         combined_ax = axs[0]
         combined_ax.set_title("Combined DOS Points for All Contributing Peaks")
         for idx, peak in enumerate(res.peaks):
-            combined_ax.scatter(peak.energy_array, peak.dos_array, color=get_root_color(peak.root), s=3)
+            combined_ax.plot(peak.energy_array, peak.dos_array, '.', markersize=2, color=get_root_color(peak.root))
         combined_ax.set_xlabel("E (a.u.)")
         combined_ax.set_ylabel("DOS")
         combined_ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-        for idx, peak in enumerate(sorted(res.peaks, key=lambda p: p.root)):
+        sorted_peaks = sorted(res.peaks, key=lambda p: p.root)
+        log_rel_ssrs = np.array([-np.log10(max(peak.rel_ssr_per_point, 0) + 1) for peak in sorted_peaks])
+        fit_colors = cmap(norm(log_rel_ssrs))
+        for idx, peak in enumerate(sorted_peaks):
             ax = axs[idx+1]
             x_data = peak.energy_array
             y_data = peak.dos_array
@@ -231,11 +238,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             if not peak.is_descending:
                 x_smooth = np.linspace(min(x_data), max(x_data), 1000)
                 y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
-
-                log_rel_ssr = -np.log10(max(peak.rel_ssr_per_point, 0) + 1)
-                fit_color = cmap(norm(log_rel_ssr))
-
-                ax.plot(x_smooth, y_smooth, color=fit_color)
+                ax.plot(x_smooth, y_smooth, color=fit_colors[idx])
                 ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
             else:
                 ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, \n[!] Energy descending with growing gamma [!]", color='red')
@@ -250,27 +253,14 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
                 annotation = "<Selected>"
                 ax.text(0.5, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='center')
 
-                # fit_text = (f"E = {peak.energy():.6f}\nGamma = {peak.fit_Gamma:.6f}\n"
-            #             f"A = {peak.fit_A:.6f}\ny0 = {peak.fit_y0:.6f}\n"
-            #             f"Rel SSR = {peak.rel_ssr_per_point:.3e}\n")
-            # if len(peak.slope_energies):
-            #     ax.scatter([peak.energy_array[i] for i in peak.slope_energies[:3]], [peak.dos_array[i] for i in peak.slope_energies[:3]], edgecolor="cyan")
-            #     ax.scatter(peak.slope_energies[3:6], [0 for i in peak.slope_energies[3:6]], edgecolor="cyan")
-            #     fit_text += f"{peak.slope_energies[-1]}"
-            # if peak.warning:
-            #     fit_text += f"\nWarning: {peak.warning}"
-            # bbox_color = "green" if peak == res.best_fit else "white"
-            # ax.text(0.30, 0.05, fit_text, transform=ax.transAxes, fontsize=10,
-            #         verticalalignment='bottom', bbox=dict(boxstyle="round", facecolor="white", edgecolor=bbox_color, alpha=0.5))
-
         # Hide unused subplots
         for ax in axs[len(res.peaks)+1:]:
             ax.axis('off')
 
         plt.tight_layout()
         output_file = f"{threshold_dir(project_dir, res.threshold)}[{res.index}]{res.energy:.8f}.png"
-        plt.savefig(output_file)
-        plt.close()
+        fig.savefig(output_file)
+        plt.close('all')
         if resonance_index is not None:
             open_file(output_file, open_files)
 
@@ -350,7 +340,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
     plt.minorticks_on()
     plt.tight_layout()
     plt.savefig(output_file)
-    plt.close()
+    plt.close('all')
     open_file(output_file)
 
 
@@ -429,13 +419,15 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
 
 
     plot_arrays = get_plot_arrays()  # prepared arrays trimmed for efficient plotting
-
+    executor.shutdown(wait=True)
+    # print("plot arrays: ", plot_arrays)
     res_thr = [r for r in resonances if emin <= r.energy <= emax]
     res_thr.sort(key=lambda r: r.energy)
 
     if not manual_range and res_thr:
         best_fit = res_thr[0].best_fit
-        emin = max(best_fit.energy() - 10 * best_fit.fit_Gamma, emin)
+        if best_fit is not None and best_fit.fit_Gamma is not None:
+            emin = max(best_fit.energy() - 10 * best_fit.fit_Gamma, emin)
 
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
@@ -504,8 +496,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     # plt.ioff()  # Turn off interactive mode if accidentally enabled
     plt.subplots_adjust(wspace=0)
 
-    plt.savefig(output_file, pil_kwargs={'compress_level': 1})
-    plt.close()
+    fig.savefig(output_file, pil_kwargs={'compress_level': 1})
+    plt.close('all')
     open_file(output_file, open_files)
 
 
@@ -549,7 +541,7 @@ def plot_partitions(data, fitted_peaks_by_root, output_file, points):
     plt.ylim(-0.7, -0.5)
     plt.title("Partitioned Sections of DOS by Root")
     plt.savefig(output_file)
-    plt.close()
+    plt.close('all')
     open_file(output_file)
 
 

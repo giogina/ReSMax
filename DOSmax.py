@@ -1,8 +1,11 @@
+import cProfile
+import pstats
 import sys
 import os
 import subprocess
 import importlib.util
 import importlib.metadata
+import time
 
 verbose = False
 
@@ -101,46 +104,52 @@ def fitDOS(data, energy_range, thresholds, project_dir):
     thresholds (list): List of energy thresholds for categorizing resonances.
     project_dir (str): Path to the project directory
     """
+
     result_file = project_dir + "resonances.txt"
     data_keys = list(data.keys())
     data_keys = [k for k in data_keys if type(k) is str and k.startswith("rho_")]
     data_keys.sort(key=lambda k: min(data[int(k[4:])]))  # It seems DOS maxima are best sampled as they come into view bottom->top.
     fitted_peaks_by_root = {}
-    fitted_half_peaks_by_root = {}
-    lowest_populated_threshold = None
-    with open(result_file, 'w') as save_file:
-        save_file.write("MBS:\r\n")
-    print("Scanning all local DOS maxima...")
+    print("Scanning all local DOS maxima...\n")
     valley_points = []
+    save_file_string = "MBS:\r\n"
+
+    min_energy = np.min([np.min(data[root][1:-1]) for root in data if isinstance(root, int)])
+    max_energy = np.max([np.max(data[root][1:-1]) for root in data if isinstance(root, int)])
+
+    min_E = min_energy if energy_range[0] is None else energy_range[0]  # for masking data
+    max_E = max_energy if energy_range[1] is None else energy_range[1]
+
+    lowest_populated_threshold = ([t for t in thresholds if min_energy < t] + [0])[0]
+
     for key in data_keys:
         root = int(key[4:])
         energy_array = data[root][1:-1]
         gamma_array = data["gamma"][1:-1]
-        dos_array = data[key]
-        fitted_peaks_by_root[root] = []
-        fitted_half_peaks_by_root[root] = []
-        thresholds_above = [t for t in thresholds if min(energy_array) < t]
-        if len(thresholds_above):
-            if lowest_populated_threshold is None:
-                lowest_populated_threshold = thresholds_above[0]
-            if lowest_populated_threshold == thresholds_above[0]:
-                min_index = np.argmin(energy_array)
-                mbs_string = f"Root {root}, E = {min(energy_array)} at gamma = {gamma_array[np.argmin(energy_array)]:.4f}"
-                if min_index < 5 or min_index > len(gamma_array)-6:
-                    mbs_string += f" [!] Minimum near {'lower' if min_index<5 else 'upper'} end of gamma range!"
-                print(f"MBS: {mbs_string}")
-                with open(result_file, 'a') as save_file:
-                    save_file.write(f"{mbs_string}\r\n")
-        if energy_range != (None, None):
-            min_E = min(energy_array) if energy_range[0] is None else energy_range[0]
-            max_E = max(energy_array) if energy_range[1] is None else energy_range[1]
-            included_indices = [i for i, e in enumerate(energy_array) if (min_E <= e <= max_E) and 0 <= i]
-            if not len(included_indices):
-                continue
-            energy_array = np.array([energy_array[i] for i in included_indices])
-            gamma_array = np.array([gamma_array[i] for i in included_indices])
-            dos_array = np.array([dos_array[i] for i in included_indices])
+        min_e = np.min(energy_array)
+        if min_e < lowest_populated_threshold:
+            min_index = np.argmin(energy_array)
+            mbs_string = f"Root {root}, E = {min_e} at gamma = {gamma_array[min_index]:.4f}"
+            if min_index < 5 or min_index > len(gamma_array)-6:
+                mbs_string += f" [!] Minimum near {'lower' if min_index<5 else 'upper'} end of gamma range!"
+            print(f"MBS: {mbs_string}")
+            save_file_string += f"{mbs_string}\r\n"
+    with open(result_file, 'w') as save_file:
+        save_file.write(save_file_string)
 
+    print("\n Detecting and fitting DOS peaks...")
+
+    for key in data_keys:
+        root = int(key[4:])
+        energy_array = data[root][1:-1]
+        mask = (energy_array >= min_E) & (energy_array <= max_E)
+        if not np.any(mask):
+            continue
+        energy_array = energy_array[mask]
+        gamma_array = data["gamma"][1:-1][mask]
+        dos_array = data[key][mask]
+
+        fitted_peaks_by_root[root] = []
         valley_indices, _ = signal.find_peaks(-dos_array)
 
         valley_indices = [i for i in valley_indices if dos_array[i] >= 0]  # only cut on ascends, not in the middle of descending pieces.
@@ -152,19 +161,22 @@ def fitDOS(data, energy_range, thresholds, project_dir):
         for iv in range(0, len(valley_indices) - 1):
             v = int(valley_indices[iv])
             v2 = int(valley_indices[iv+1])
-            valley_points.append([float(gamma_array[v]), float(energy_array[v])])
             energies = energy_array[v:v2]
             gammas = gamma_array[v:v2]
             rhos = dos_array[v:v2]
+            # valley_points.append([float(gamma_array[v]), float(energy_array[v])])
 
-            if len(rhos):
-                dp = DOSpeak(energies, rhos, gammas, root)  # descending sections can be added; for these, rel_ssr_per_point = 10**6, energy() = min(energies)
-                dp.fit_lorentzian()
-                if dp.energy() is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
-                    fitted_peaks_by_root[root].append(dp)
+            if not len(rhos):
+                continue
 
-    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)
-    print("Finding resonances...")
+            dp = DOSpeak(energies, rhos, gammas, root)  # descending sections can be added; for these, rel_ssr_per_point = 10**6, energy() = min(energies)
+            dp.fit_lorentzian()
+            if dp.energy() is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
+                fitted_peaks_by_root[root].append(dp)
+
+    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)  # also uncomment the valley_points.append above to activate
+
+    print(" Finding resonances...")
     find_resonances(fitted_peaks_by_root)
     for res in Resonance.resonances:
         res.categorize_by_thresholds(thresholds)
@@ -417,9 +429,15 @@ def main(file):
     Parameters:
     file (str): The path to the file to process.
     """
+    # start = time.time()
+
     print(f"Processing file: {file}")
     data = parse(file)
-    # data = cleanup(data)  # temp: no cleaning
+
+    # end = time.time()
+    # print("Parsing done ", end-start)
+    # start = end
+
     action = "o"  # overview plot
     low = None
     high = 0
@@ -429,13 +447,13 @@ def main(file):
     while action != "r":
         if redo_overview:
             plot_file = project_directory(file) + "overview.png"
-            plot.overview(data, plot_file, low, high, margin=overview_margin)  # todo: getting mine, maxe from here is sketchy
+            plot.overview(data, plot_file, low, high, margin=overview_margin)
             data = computeDOS(data)
             if thresholds is None:
                 thresholds = generate_thresholds(2)  # dummy value in case no thresholds are entered
             redo_overview = False
             print(f"\nγ vs E overview graph has been plotted to {plot_file}.")
-        next_action = input(f"Please specify your next action: \n\n"  # TODO: Maybe save last input, allow arrow-up to insert it?
+        next_action = input(f"Please specify your next action: \n\n"
                             "    'o': Plot gamma vs E overview graph (full energy range).\n"
                             "    'o E_min E_max': Re-plot gamma vs E overview graph (specified energy range).\n"
                             "    'r': Fit density of state over the currently displayed range ({'-∞' if low is None else low}..{high})\n"
@@ -507,6 +525,7 @@ def main(file):
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
     plot.start_clustering_background_preparation(data, thresholds)
+
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None], default=0) # governs check loop and resonances.txt output cutoff!
@@ -519,12 +538,12 @@ def main(file):
             break
 
         if i > 0 and threshold <= max_thr:
-            print(f"Plotting resonance overview for threshold {threshold}...")
+            print(f" Plotting resonance overview for threshold {threshold}...")
             plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, threshold_above=threshold)
             manual_range = False
 
             while True:
-                action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n"
+                action = input(f"\nPlease verify the detected resonances in {project_directory(file)}resonance_plots.\n\n"
                           f"    'ok': Accept & proceed to next threshold\n"
                         + (f"    'back': Return to previous threshold\n" if (i>1) else "") +
                           f"    'end': Skip remaining thresholds & print results\n"
@@ -624,3 +643,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--file', type=str, required=True, help="Path to the file")
     args = parser.parse_args()
     main(args.file)
+    # with cProfile.Profile() as pr:
+    #     main(args.file)
+    # stats = pstats.Stats(pr)
+    # stats.sort_stats("cumulative").print_stats(100)

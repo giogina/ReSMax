@@ -50,8 +50,7 @@ class DOSpeak:
         self.approx_peak_rho = float(rho[peak_i])
         self.approx_y0 = min(rho) / 2
         self.approx_Gamma = None
-        self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)  # Trimming causes fits to fail, especially if only half the peak is present.
-        # self.energy_array, self.dos_array, self.gamma_array = energy, rho, gamma
+        self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
         self.slope_energies = []  # temp
         self.deriv_ratio = self.compute_dos_derivative_ratio()
@@ -92,21 +91,11 @@ class DOSpeak:
         return energy[trim_left:trim_right], rho[trim_left:trim_right], gamma[trim_left:trim_right]
 
     def trim_half(self, energy, dos):
+        dos_max = np.max(dos)
         deriv_num = (dos[1:] - dos[:-1])
-        deriv = deriv_num/(energy[1:] - energy[:-1])
-        steepening = True
-        prev_delta = 0
-        for i, delta in enumerate(deriv):
-            if abs(deriv_num[i]) > 0.6*max(dos):
-                if verbose:
-                    print(f"Big jump detected at i={i}! {delta} vs {max(dos)}")
-                return i+1
-            # if steepening and abs(delta) < abs(prev_delta):
-            #     steepening = False  # we're past the steepest point of the peak flank
-            # if not steepening and abs(delta) > abs(prev_delta):
-            #     print(f"i={i}, re-steepening cut-off")
-            #     return i  # getting steeper again; cut off here.
-            # prev_delta = delta
+        big_jump_indices = np.where(np.abs(deriv_num) > 0.6 * dos_max)[0]
+        if big_jump_indices.size > 0:
+            return big_jump_indices[0] + 1  # Return first occurrence of a jump
         return len(dos)  # no trimming condition found; use whole arrays
 
     def get_smooth_lorentzian_curve(self, x_array):
@@ -187,23 +176,26 @@ class DOSpeak:
             if verbose:
                 print(f"Root {self.root}: Peak at E={self.approx_peak_E}, rho={self.approx_peak_rho} is too asymmetrical to bother fitting.")
             return None
-
+        dos_max = np.max(self.dos_array)
         self.nr_fit_attempts += 1
         try:
-            guesses = self.initial_guesses()
+            guesses = self.initial_guesses()  # todo: improve? For the first peak coming in, this seems kinda off; better later.
             self.approx_Gamma = guesses[2]
             self.fit_arrays_to_Gamma_multiple()
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore", optimize.OptimizeWarning)
+                warnings.simplefilter("ignore", optimize.OptimizeWarning) #(E, y0, A, Gamma, Er)
+                bounds = ([self.approx_peak_E-0.1*self.approx_Gamma, -dos_max*0.1, guesses[1]*0.8, min(self.energy_array)], [self.approx_peak_E+0.1*self.approx_Gamma, dos_max*0.1, guesses[1] / 0.8, max(self.energy_array)])
                 if self.nr_fit_attempts == 1:
-                    cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses)
+                    cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses, bounds=bounds, method='trf', max_nfev=500)  # faster method with bounds
                 else:
-                    cv = optimize.curve_fit(lorentzian, np.insert(self.energy_array, 0, self.approx_peak_E-5*guesses[2]),
-                                            np.insert(self.dos_array, 0, guesses[0]), p0=guesses)
+                    energy_prepended = np.concatenate(([self.approx_peak_E - 5 * guesses[2]], self.energy_array))
+                    dos_prepended = np.concatenate(([guesses[0]], self.dos_array))
+                    cv = optimize.curve_fit(lorentzian, energy_prepended, dos_prepended, p0=guesses)  # fallback
+
         except Exception as e:
             if verbose:
                 print(f"Root {self.root}: Fit failed for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
-            if 2 < self.nr_fit_attempts < 9 and len(self.dos_array) > 20:
+            if 2 < self.nr_fit_attempts < 3 and len(self.dos_array) > 20:
                 if verbose: print("Retrying...")
                 self.approx_peak_E -= 0.0001
                 self.approx_peak_rho -= 0.0001 * (self.dos_array[2] - self.dos_array[1])/(self.energy_array[2] - self.energy_array[1])
@@ -214,12 +206,14 @@ class DOSpeak:
                 return None
         popt = cv[0]
         pcov = cv[1]
+        # if self.approx_peak_E < -0.55:  # looks like the guesses are pretty good
+        #     print((popt-guesses)/popt, [float(g) for g in guesses], [float(g) for g in popt])  # [y0, A, Gamma, Er]
         if np.any(np.isinf(pcov)):
             if verbose:
                 print(f"Root {self.root}: Fit did not converge for peak at E={self.approx_peak_E}, rho={self.approx_peak_rho}, on {len(self.energy_array)} available data points.")
             return None
         else:
-            self.fitted_dos_array = np.array([lorentzian(e, *popt) for e in self.energy_array])
+            self.fitted_dos_array = lorentzian(self.energy_array, *popt)
             self.ssr = np.sum((self.dos_array - self.fitted_dos_array) ** 2)
             self.rel_ssr_per_point = math.sqrt(self.ssr) / (len(self.dos_array)) / self.approx_peak_rho**2  # / (0.01+self.deriv_ratio)
             self.fit_E = popt[3]
