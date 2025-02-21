@@ -5,20 +5,18 @@ import platform
 import matplotlib.pyplot as plt
 import numpy as np
 import psutil
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.transforms import Affine2D
 
 
 def get_root_color(rootnr: int):
-    colors = ["firebrick", "royalblue", "olive", "teal",
-              "orangered", "mediumblue", "green", "dodgerblue", "darkviolet",
-              "chocolate", "darkslateblue", "seagreen", "steelblue", "purple", "indigo"
-        # "blue", "orange", "green", "red", "purple", "brown", "pink", "gray", "olive", "cyan",
-        #       "navy", "teal", "gold", "lime", "maroon", "yellow", "magenta", "turquoise", "indigo"
-              ]
-    return colors[rootnr % len(colors)]
+    saturation = 1
+    value = 0.8
+    hue = (rootnr * 222.5+15) % 360
+    hue /= 360.0
+    return hsv_to_rgb((hue, saturation, value))
 
 
 def plot_DOS(data, root, file, fitted_peaks_by_root=None):
@@ -89,7 +87,7 @@ def overview(data, plot_file, from_e=None, to_e=None):
 
     for key, values in data.items():
         if type(key) is int:
-            plt.plot(data["gamma"], values, label=key)  # plot / scatter
+            plt.plot(data["gamma"], values, label=key, color=get_root_color(key))  # plot / scatter
             # if len(data[f"cleaned_{key}"]):
             #     plt.scatter(data["gamma"][data[f"cleaned_{key}"]], values[data[f"cleaned_{key}"]], label=key, s=5, color=get_root_color(key))
             # plt.scatter(data["gamma"], values, label=key, s=5, color=get_root_color(key))
@@ -310,7 +308,7 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
             color = get_root_color(root)
             plt.scatter(
                 energy,
-                np.log10(rho+1), #+1*int(key[4:]),
+                np.log10(np.clip(rho, 0, None) + 1), #+1*int(key[4:]),
                 # color="gray",
                 color=color,
                 alpha=0.5,
