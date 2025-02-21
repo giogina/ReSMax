@@ -408,8 +408,6 @@ def last_local_minimum(energy):
         return highest_local_min_index + 3
     return 0
 
-# TODO: Test all modes for bugs (with peak.xyz values being None due to being is_descending)
-
 def generate_thresholds(z: int):
     n = 1
     thresholds = [-z * z / 2.]
