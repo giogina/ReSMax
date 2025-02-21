@@ -1,15 +1,21 @@
 import os
 import subprocess
 import platform
-
-import matplotlib.pyplot as plt
+import time
 import numpy as np
 import psutil
+
+from concurrent.futures import ThreadPoolExecutor
+
+import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.transforms import Affine2D
 
+
+
+# matplotlib.use('Agg')  # faster backend
 
 def get_root_color(rootnr: int):
     saturation = 1
@@ -269,9 +275,6 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
     """
     plt.figure(figsize=(240, 8))  # Make the plot wide for better energy resolution
 
-    colors = ["blue", "purple", "red", "yellow", "green", "cyan"]
-    num_colors = len(colors)
-
     # Plot the clustering amount if provided
     if clustering_output:
         energy_grid, clustering_array, peak_energies = clustering_output
@@ -341,7 +344,61 @@ def plot_all_resonance_peaks(data, resonances, output_file, emin=None, emax=None
     open_file(output_file)
 
 
-def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files, manual_range = False):
+
+executor = ThreadPoolExecutor(max_workers=1)
+clustering_future = None  # Will store the background future
+
+def start_clustering_background_preparation(data, thresholds):
+    global clustering_future
+    clustering_future = executor.submit(prepare_clustering_points, data, thresholds)
+
+def get_clustering_result():
+    global clustering_future
+    if clustering_future is not None:
+        result = clustering_future.result()  # Waits here if still running
+        return result
+
+def prepare_clustering_points(data, thresholds):
+    """
+    Prepares energy and rho arrays for clustering analysis, segmented by given thresholds.
+
+    Parameters:
+    - data (dict): Parsed data containing energy and DOS arrays.
+    - thresholds (list): Energy thresholds defining sections for clustering.
+
+    Returns:
+    - dict: Dictionary containing full arrays and threshold-segmented arrays.
+    """
+    all_energies = []
+    all_rhos = []
+
+    for key in data.keys():
+        if isinstance(key, str) and key.startswith("rho_"):
+            root = int(key[4:])
+            rho = data[key]
+            energy = data[root][1:-1]
+            all_energies.append(energy)
+            all_rhos.append(rho)
+
+    # Concatenate lists of arrays into single large NumPy arrays
+    all_energies = np.concatenate(all_energies)
+    all_rhos = np.concatenate(all_rhos)
+    all_log10_rhos = np.log10(np.clip(all_rhos, 0, None) + 1)
+
+    clustering_arrays = {"all_energies": all_energies, "all_rhos": all_rhos}
+
+    prev_threshold = -np.inf
+    for threshold in thresholds:
+        mask = (all_energies >= prev_threshold) & (all_energies <= threshold)
+        clustering_arrays[f"energies_{threshold}"] = all_energies[mask]
+        clustering_arrays[f"log10_rhos_{threshold}"] = all_log10_rhos[mask]
+        prev_threshold = threshold
+
+    return clustering_arrays
+
+clustering_cache = {}
+
+def resonance_partitions_with_clustering(data, resonances, emin, emax, output_file, open_files, threshold_above=0, manual_range = False):
     """
     Plot the partitioned sections of each root based on fitted peaks.
 
@@ -350,6 +407,13 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     fitted_peaks_by_root (dict): Dictionary of fitted peaks organized by root.
     output_file (str): The path where the plot will be saved.
     """
+
+
+    clustering_arrays = get_clustering_result()
+
+    start = time.time()
+
+    cache_key = (emin, emax)
     res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
     res_thr.sort(key=lambda r: r.energy)
     if not manual_range:
@@ -360,9 +424,17 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
 
+    end = time.time()
+    print(f"Ax setup: {end - start}")
+    start = end
+
     for root in data.keys():
         if type(root) is int:
             ax1.plot(data["gamma"], data[root], color="gray", alpha=0.2)
+
+    end = time.time()
+    print(f"Gray lines: {end - start}")
+    start = end
 
     for res in resonances:
         show = res.should_be_shown()
@@ -370,11 +442,15 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             if show is not False:
                 ax1.scatter(res.best_fit.gamma_array, res.best_fit.energy_array, color=get_root_color(res.index), s=5)
                 for peak in res.peaks:
+                    ax1.plot(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), linewidth=3, alpha=0.2)
                     annotation_color = 'red' if peak.is_descending else 'black'  # "peaks" based on descending sections are marked red
-                    ax1.scatter(peak.gamma_array, peak.energy_array, color=get_root_color(res.index), s=5, alpha=0.1)
                     vertical_offset = 0.0016 * (emax-emin)
                     if emin < peak.energy()+vertical_offset < emax:
                         ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
+
+    end = time.time()
+    print(f"resonance sections: {end - start}")
+    start = end
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
     for res in resonances:
@@ -387,13 +463,17 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             ax2.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.5)
             ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
 
-    for key in data.keys():
-        if type(key) is str and key.startswith("rho_"):  # Identify DOS arrays
-            root = int(key[4:])
-            rho = data[key]
-            energy = data[root][1:-1]
 
-            ax2.scatter(energy, np.log10(np.clip(rho, 0, None) + 1), color="gray", alpha=0.5, s=5, transform=rotation + ax2.transData)
+    end = time.time()
+    print(f"Resonance lines: {end - start}")
+    start = end
+
+    # todo: same for panorama
+    ax2.plot(clustering_arrays[f"energies_{threshold_above}"], clustering_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
+
+    end = time.time()
+    print(f"Clustering scatter: {end - start}")
+    start = end
 
     ax1.set_xlabel("gamma")
     ax2.set_xlabel("log(DOS)")
@@ -402,10 +482,20 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     # ax1.set_title("Partitioned Sections of DOS by Resonance")
     ax2.set_xlim(-4, 0.1)
     ax2.tick_params(left=False, labelleft=False)
+    # plt.ioff()  # Turn off interactive mode if accidentally enabled
     plt.subplots_adjust(wspace=0)
-    plt.savefig(output_file)
+    plt.savefig(output_file, pil_kwargs={'compress_level': 1})
     plt.close()
+
+    end = time.time()
+    print(f"Savefig: {end - start}")
+    start = end
+
     open_file(output_file, open_files)
+
+    end = time.time()
+    print(f"Open file: {end - start}")
+    start = end
 
 
 # Debug function

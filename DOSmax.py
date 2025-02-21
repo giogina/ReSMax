@@ -444,7 +444,6 @@ def main(file):
                             "    't': input list of thresholds (default: [-Z^2/n^2/2, n = 1..20])\n"
                             "    'p': Plot panorama log(DOS) vs E\n"
                             "    'p E_min E_max': Plot panorama log(DOS) vs E for E = E_min..Emax\n"
-                            # f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
                             "    'x': exit\n"
                             )
         try:
@@ -507,7 +506,7 @@ def main(file):
         except Exception as e:
             print(e)
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
-
+    plot.start_clustering_background_preparation(data, thresholds)
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None], default=0) # governs check loop and resonances.txt output cutoff!
@@ -521,7 +520,7 @@ def main(file):
 
         if i > 0 and threshold <= max_thr:
             print(f"Plotting resonance overview for threshold {threshold}...")
-            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None)
+            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, threshold_above=threshold)
             manual_range = False
 
             while True:
@@ -557,7 +556,7 @@ def main(file):
                             resonance_overview_range.sort()
                             overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}resonances_{emin}_{emax}.png"
                             manual_range = True
-                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
+                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range, threshold_above=threshold)
                         except ValueError:
                             print("Invalid format. Use: plot Emin Emax, e.g. plot -0.7 -0.5")
                     elif action.lower() == "close":
@@ -586,7 +585,7 @@ def main(file):
                                         res.best_fit = None
                                         changed_thresholds.append(res.threshold)
                         if i > 0 and threshold in changed_thresholds: # redo overview plot
-                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range)
+                            plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range, threshold_above=threshold)
                 except Exception as e:
                     print(f"Invalid input: {e}")
 
