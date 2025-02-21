@@ -88,9 +88,6 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     for key, values in data.items():
         if type(key) is int:
             plt.plot(data["gamma"], values, label=key, color=get_root_color(key))  # plot / scatter
-            # if len(data[f"cleaned_{key}"]):
-            #     plt.scatter(data["gamma"][data[f"cleaned_{key}"]], values[data[f"cleaned_{key}"]], label=key, s=5, color=get_root_color(key))
-            # plt.scatter(data["gamma"], values, label=key, s=5, color=get_root_color(key))
             if from_e is None:
                 min_E = min(min_E, min(values))
             if to_e is None:
@@ -99,8 +96,6 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     plt.xlabel("γ")
     plt.ylabel("Energy (a.u.)")
     plt.ylim(bottom=min_E - margin, top=max_E + margin)
-    # plt.ylim(bottom=min_E - 0.0, top=max_E + 0.0)
-    # plt.ylim(bottom=-0.38, top=-0.22)
     plt.locator_params(axis='x', nbins=20)
     plt.locator_params(axis='y', nbins=20)
     plt.minorticks_on()
@@ -108,7 +103,6 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     plt.savefig(plot_file)
     plt.close()
     open_file(plot_file)
-    return min_E, max_E
 
 def open_file(file, opened_files = None):
     """

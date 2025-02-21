@@ -398,6 +398,17 @@ def last_local_minimum(energy):
 
 # TODO: Test all modes for bugs (with peak.xyz values being None due to being is_descending)
 
+def generate_thresholds(z: int):
+    n = 1
+    thresholds = [-z * z / 2.]
+    # if max_E is None or max_E >= 0:
+    #     max_E = -z * z / 2. / 400  # should never happen - limit to 20 threshold values
+    # while thresholds[-1] < max_E:
+    while n < 20:
+        n += 1
+        thresholds.append(-z * z / 2. / n / n)
+    thresholds.append(0)
+    return thresholds
 
 def main(file):
     """
@@ -413,17 +424,15 @@ def main(file):
     low = None
     high = 0
     thresholds = None
-    min_e = None
-    max_e = None
     redo_overview = True
     overview_margin = 0.03
     while action != "r":
         if redo_overview:
             plot_file = project_directory(file) + "overview.png"
-            min_e, max_e = plot.overview(data, plot_file, low, high, margin=overview_margin)
+            plot.overview(data, plot_file, low, high, margin=overview_margin)  # todo: getting mine, maxe from here is sketchy
             data = computeDOS(data)
             if thresholds is None:
-                thresholds = [max_e]  # dummy value in case no thresholds are entered
+                thresholds = generate_thresholds(2)  # dummy value in case no thresholds are entered
             redo_overview = False
             print(f"\nγ vs E overview graph has been plotted to {plot_file}.")
         next_action = input(f"Please specify your next action: \n\n"  # TODO: Maybe save last input, allow arrow-up to insert it?
@@ -431,8 +440,8 @@ def main(file):
                             "    'o E_min E_max': Re-plot gamma vs E overview graph (specified energy range).\n"
                             "    'r': Fit density of state over the currently displayed range ({'-∞' if low is None else low}..{high})\n"
                             "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
-                            "    'z': input nuclear charge Z\n"
-                            "    't': input list of thresholds\n"
+                            "    'z': input nuclear charge Z (default: Z = 2)\n"
+                            "    't': input list of thresholds (default: [-Z^2/n^2/2, n = 1..20])\n"
                             "    'p': Plot panorama log(DOS) vs E\n"
                             "    'p E_min E_max': Plot panorama log(DOS) vs E for E = E_min..Emax\n"
                             # f"    'd': in case of discontinuity: Use {'point-wise maximum' if DOSpeak.discontinuity_treatment == 'fit' else 'fit'} (currently: using {DOSpeak.discontinuity_treatment})\n"
@@ -457,15 +466,8 @@ def main(file):
                     inp_z = input("Z = ")
                     try:
                         z = int(inp_z)
-                        n = 1
-                        thresholds = [-z * z / 2.]
-                        if max_e is None or max_e >= 0:
-                            max_e = -z * z / 2. / 400  # should never happen - limit to 20 threshold values
-                        while thresholds[-1] < max_e:
-                            n += 1
-                            thresholds.append(-z * z / 2. / n / n)
-                        thresholds.append(0)
-                        print(f"Threshold values: {' '.join([str(t) for t in thresholds if t > min_e])}")
+                        thresholds = generate_thresholds(z)
+                        print(f"Threshold values: {' '.join([str(t) for t in thresholds])}")
                         ok = True
                     except:
                         print("Please input an integer.")
@@ -508,7 +510,7 @@ def main(file):
 
     fitDOS(data, (low, high), thresholds, project_directory(file))
 
-    max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None]) # governs check loop and resonances.txt output cutoff!
+    max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None], default=0) # governs check loop and resonances.txt output cutoff!
     i = 1
     while i<len(thresholds):
         threshold = thresholds[i]
