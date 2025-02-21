@@ -2,11 +2,15 @@ import os
 import subprocess
 import platform
 import time
+
 import numpy as np
 import psutil
 
 from concurrent.futures import ThreadPoolExecutor
 
+from matplotlib.collections import LineCollection
+from matplotlib.figure import Figure
+from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
@@ -350,15 +354,15 @@ clustering_future = None  # Will store the background future
 
 def start_clustering_background_preparation(data, thresholds):
     global clustering_future
-    clustering_future = executor.submit(prepare_clustering_points, data, thresholds)
+    clustering_future = executor.submit(prepare_plot_arrays, data, thresholds)
 
-def get_clustering_result():
+def get_plot_arrays():
     global clustering_future
     if clustering_future is not None:
         result = clustering_future.result()  # Waits here if still running
         return result
 
-def prepare_clustering_points(data, thresholds):
+def prepare_plot_arrays(data, thresholds):
     """
     Prepares energy and rho arrays for clustering analysis, segmented by given thresholds.
 
@@ -371,6 +375,8 @@ def prepare_clustering_points(data, thresholds):
     """
     all_energies = []
     all_rhos = []
+    line_data = {threshold: [] for threshold in thresholds}
+    gamma = data["gamma"][1:-1]
 
     for key in data.keys():
         if isinstance(key, str) and key.startswith("rho_"):
@@ -380,21 +386,29 @@ def prepare_clustering_points(data, thresholds):
             all_energies.append(energy)
             all_rhos.append(rho)
 
+            prev_threshold = -np.inf
+            for threshold in thresholds:
+                mask = (energy >= prev_threshold) & (energy <= threshold)
+                if np.any(mask):  # Only append non-empty segments
+                    line_data[threshold].append((gamma[mask], energy[mask]))
+                prev_threshold = threshold
+
+
     # Concatenate lists of arrays into single large NumPy arrays
     all_energies = np.concatenate(all_energies)
     all_rhos = np.concatenate(all_rhos)
     all_log10_rhos = np.log10(np.clip(all_rhos, 0, None) + 1)
 
-    clustering_arrays = {"all_energies": all_energies, "all_rhos": all_rhos}
+    plot_arrays = {"all_energies": all_energies, "all_log10_rhos": all_log10_rhos, "line_data": line_data}
 
     prev_threshold = -np.inf
     for threshold in thresholds:
         mask = (all_energies >= prev_threshold) & (all_energies <= threshold)
-        clustering_arrays[f"energies_{threshold}"] = all_energies[mask]
-        clustering_arrays[f"log10_rhos_{threshold}"] = all_log10_rhos[mask]
+        plot_arrays[f"energies_{threshold}"] = all_energies[mask]
+        plot_arrays[f"log10_rhos_{threshold}"] = all_log10_rhos[mask]
         prev_threshold = threshold
 
-    return clustering_arrays
+    return plot_arrays
 
 clustering_cache = {}
 
@@ -409,15 +423,21 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     """
 
 
-    clustering_arrays = get_clustering_result()
+    plot_arrays = get_plot_arrays()  # prepared arrays trimmed for efficient plotting
 
     start = time.time()
 
     cache_key = (emin, emax)
     res_thr = [r for r in resonances if emin <= r.energy <= emax and r.best_fit is not None]
     res_thr.sort(key=lambda r: r.energy)
-    if not manual_range:
-        emin = max(res_thr[0].best_fit.energy() - 10 * res_thr[0].best_fit.fit_Gamma, emin)
+
+    if not manual_range and res_thr:
+        best_fit = res_thr[0].best_fit
+        emin = max(best_fit.energy() - 10 * best_fit.fit_Gamma, emin)
+
+    end = time.time()
+    print(f"Emin recalc: {end - start}")
+    start = end
 
     fig = plt.figure(figsize=(21, 12))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
@@ -428,9 +448,9 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     print(f"Ax setup: {end - start}")
     start = end
 
-    for root in data.keys():
-        if type(root) is int:
-            ax1.plot(data["gamma"], data[root], color="gray", alpha=0.2)
+    background_lines = plot_arrays["line_data"][threshold_above]
+    for gamma_seg, energy_seg in background_lines:
+        ax1.plot(gamma_seg, energy_seg, color="lightgray")
 
     end = time.time()
     print(f"Gray lines: {end - start}")
@@ -469,7 +489,7 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     start = end
 
     # todo: same for panorama
-    ax2.plot(clustering_arrays[f"energies_{threshold_above}"], clustering_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
+    ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
 
     end = time.time()
     print(f"Clustering scatter: {end - start}")
