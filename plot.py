@@ -228,6 +228,8 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
                 x_smooth = np.linspace(min(x_data), max(x_data), 1000)
                 y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
                 ax.plot(x_smooth, y_smooth, color=fit_colors[idx])
+                # y_smooth_guess = peak.get_smooth_guess_lorentzian_curve(x_smooth)  # debug plots for checking initial guesses - looking good!
+                # ax.plot(x_smooth, y_smooth_guess, color="blue")
                 ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
             else:
                 ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, \n[!] Energy descending with growing gamma [!]", color='red')
@@ -464,7 +466,7 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
             ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
 
-    ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)  # todo: same for panorama
+    ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)
 
     for artist in ax1.get_children():
         if hasattr(artist, 'set_rasterized'):

@@ -50,6 +50,7 @@ class DOSpeak:
         self.approx_peak_rho = float(rho[peak_i])
         self.approx_y0 = min(rho) / 2
         self.approx_Gamma = None
+        self.approx_A = None
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
         self.slope_energies = []  # temp
@@ -110,6 +111,9 @@ class DOSpeak:
         """
         return lorentzian(x_array, self.fit_y0, self.fit_A, self.fit_Gamma, self.fit_E)
 
+    def get_smooth_guess_lorentzian_curve(self, x_array):  # temp: debug plotting
+        return lorentzian(x_array, self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E)
+
     def print_fitted_parameters(self):
         """
         Print the fitted parameters for the DOS peak.
@@ -146,21 +150,16 @@ class DOSpeak:
         return 2*max(left_width, right_width)  # Deal with half-peak cases
         # return abs(self.energy_array[indices[-1]] - self.energy_array[indices[0]])
 
-    def initial_guesses(self):
+    def make_initial_guesses(self):
         """
-        Provide initial guesses for the fitting parameters.
+        Provide initial guesses for the fitting parameters; save in self.approx_* class instance variables.
+        """
 
-        Returns:
-        list: Initial guesses [y0, A, Gamma, Er] for the Lorentzian fit.
-        """
-        y0 = self.approx_y0
-        Gamma = self.estimate_gamma()
-        A = self.approx_peak_rho * np.pi * Gamma / 2
-        Er = self.approx_peak_E
+        self.approx_Gamma = self.estimate_gamma()
+        self.approx_A = self.approx_peak_rho * np.pi * self.approx_Gamma / 2
         mid_index = int(len(self.dos_array)/2)
-        y0 += self.dos_array[mid_index] - lorentzian(self.energy_array[mid_index], y0, A, Gamma, Er)
+        self.approx_y0 += self.dos_array[mid_index] - lorentzian(self.energy_array[mid_index], self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E)
 
-        return [y0, A, Gamma, Er]
 
     def fit_lorentzian(self):
         """
@@ -179,18 +178,17 @@ class DOSpeak:
         dos_max = np.max(self.dos_array)
         self.nr_fit_attempts += 1
         try:
-            guesses = self.initial_guesses()  # todo: improve? For the first peak coming in, this seems kinda off; better later.
-            self.approx_Gamma = guesses[2]
-            self.fit_arrays_to_Gamma_multiple()
+            self.make_initial_guesses()
+            self.trim_arrays_to_n_Gammas_around_max()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", optimize.OptimizeWarning) #(E, y0, A, Gamma, Er)
                 bounds = ([self.approx_peak_E-0.1*self.approx_Gamma, -dos_max*0.1, guesses[1]*0.8, min(self.energy_array)], [self.approx_peak_E+0.1*self.approx_Gamma, dos_max*0.1, guesses[1] / 0.8, max(self.energy_array)])
                 if self.nr_fit_attempts == 1:
                     cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses, bounds=bounds, method='trf', max_nfev=500)  # faster method with bounds
                 else:
-                    energy_prepended = np.concatenate(([self.approx_peak_E - 5 * guesses[2]], self.energy_array))
-                    dos_prepended = np.concatenate(([guesses[0]], self.dos_array))
-                    cv = optimize.curve_fit(lorentzian, energy_prepended, dos_prepended, p0=guesses)  # fallback
+                    energy_prepended = np.concatenate(([self.approx_peak_E - 5 * self.approx_Gamma], self.energy_array))
+                    dos_prepended = np.concatenate(([self.approx_y0], self.dos_array))
+                    cv = optimize.curve_fit(lorentzian, energy_prepended, dos_prepended, p0=[self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E])
 
         except Exception as e:
             if verbose:
@@ -230,7 +228,7 @@ class DOSpeak:
             return popt
 
 
-    def fit_arrays_to_Gamma_multiple(self, multiple = 10):
+    def trim_arrays_to_n_Gammas_around_max(self, multiple = 10):
         """
         Trim the energy, DOS, and gamma arrays to fit within [fit_E - multiple*fit_Gamma, fit_E + multiple*fit_Gamma].
         """
