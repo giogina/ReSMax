@@ -182,9 +182,10 @@ class DOSpeak:
             self.trim_arrays_to_n_Gammas_around_max()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", optimize.OptimizeWarning) #(E, y0, A, Gamma, Er)
-                bounds = ([self.approx_peak_E-0.1*self.approx_Gamma, -dos_max*0.1, guesses[1]*0.8, min(self.energy_array)], [self.approx_peak_E+0.1*self.approx_Gamma, dos_max*0.1, guesses[1] / 0.8, max(self.energy_array)])
+                # bounds = ([-dos_max*0.1, self.approx_A*0.8, self.approx_Gamma*0.8, self.approx_peak_E-0.2*self.approx_Gamma], [dos_max*0.1, self.approx_Gamma / 0.8, self.approx_peak_E+0.2*self.approx_Gamma])
                 if self.nr_fit_attempts == 1:
-                    cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=guesses, bounds=bounds, method='trf', max_nfev=500)  # faster method with bounds
+                    # cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=[self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E], bounds=bounds, method='trf', max_nfev=500)  # faster method with bounds
+                    cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=[self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E])
                 else:
                     energy_prepended = np.concatenate(([self.approx_peak_E - 5 * self.approx_Gamma], self.energy_array))
                     dos_prepended = np.concatenate(([self.approx_y0], self.dos_array))
