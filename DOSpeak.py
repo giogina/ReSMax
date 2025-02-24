@@ -53,7 +53,7 @@ class DOSpeak:
         self.approx_A = None
         self.energy_array, self.dos_array, self.gamma_array = self.trim(energy, rho, gamma)
         self.pointwise_energy = self.energy_array[np.argmax(self.dos_array)]
-        self.slope_energies = []  # temp
+        # self.slope_energies = []  # temp
         self.deriv_ratio = self.compute_dos_derivative_ratio()
         self.fitted_dos_array = None
         self.fit_E = None
@@ -175,16 +175,13 @@ class DOSpeak:
             if verbose:
                 print(f"Root {self.root}: Peak at E={self.approx_peak_E}, rho={self.approx_peak_rho} is too asymmetrical to bother fitting.")
             return None
-        dos_max = np.max(self.dos_array)
         self.nr_fit_attempts += 1
         try:
             self.make_initial_guesses()
             self.trim_arrays_to_n_Gammas_around_max()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", optimize.OptimizeWarning) #(E, y0, A, Gamma, Er)
-                # bounds = ([-dos_max*0.1, self.approx_A*0.8, self.approx_Gamma*0.8, self.approx_peak_E-0.2*self.approx_Gamma], [dos_max*0.1, self.approx_Gamma / 0.8, self.approx_peak_E+0.2*self.approx_Gamma])
                 if self.nr_fit_attempts == 1:
-                    # cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=[self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E], bounds=bounds, method='trf', max_nfev=500)  # faster method with bounds
                     cv = optimize.curve_fit(lorentzian, self.energy_array, self.dos_array, p0=[self.approx_y0, self.approx_A, self.approx_Gamma, self.approx_peak_E])
                 else:
                     energy_prepended = np.concatenate(([self.approx_peak_E - 5 * self.approx_Gamma], self.energy_array))
@@ -283,22 +280,22 @@ class DOSpeak:
         min_derivative = abs(np.min(derivatives))
         max_derivative = abs(np.max(derivatives))
 
-        max_slope_index = np.argmax(derivatives)
-        max_slope = derivatives[max_slope_index]
-        if len(derivatives[:max_slope_index]) and len(derivatives[max_slope_index:]):
-            half_slope_1 = np.argmin(np.abs(derivatives[max_slope_index:] - max_slope / 2))+max_slope_index
-            half_slope_2 = np.argmin(np.abs(derivatives[:max_slope_index] - max_slope / 2))
-            Em = self.energy_array[max_slope_index]
-            Ehs1 = self.energy_array[half_slope_1]
-            Ehs2 = self.energy_array[half_slope_2]
-            Er_by_max = self.energy_array[max_index]
-            Er_by_outer_half_slope = 1.424839036*Ehs1-.4248390359*Em
-            Er_by_inner_half_slope = -.7136756879*Ehs2+1.713675688*Em
-            W_by_outer = 4.935787206*(Ehs1-Em)
-            W_by_inner = 2.472245103*(Em-Ehs2)
-            # print(f"Er guesses: {Er_by_max}, {Er_by_outer_half_slope}, {Er_by_inner_half_slope};  Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%")
-            # print(f"Gamma guesses: {W_by_outer}, {W_by_inner}")
-            self.slope_energies = [max_slope_index, half_slope_1, half_slope_2, self.energy_array[max_index], 1.424839036*Ehs1-.4248390359*Em,-.7136756879*Ehs2+1.713675688*Em, f"Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%"]
+        # max_slope_index = np.argmax(derivatives)
+        # max_slope = derivatives[max_slope_index]
+        # if len(derivatives[:max_slope_index]) and len(derivatives[max_slope_index:]):
+        #     half_slope_1 = np.argmin(np.abs(derivatives[max_slope_index:] - max_slope / 2))+max_slope_index
+        #     half_slope_2 = np.argmin(np.abs(derivatives[:max_slope_index] - max_slope / 2))
+        #     # Em = self.energy_array[max_slope_index]
+        #     Ehs1 = self.energy_array[half_slope_1]
+        #     Ehs2 = self.energy_array[half_slope_2]
+        #     Er_by_max = self.energy_array[max_index]
+        #     Er_by_outer_half_slope = 1.424839036*Ehs1-.4248390359*Em
+        #     Er_by_inner_half_slope = -.7136756879*Ehs2+1.713675688*Em
+        #     W_by_outer = 4.935787206*(Ehs1-Em)
+        #     W_by_inner = 2.472245103*(Em-Ehs2)
+        #     print(f"Er guesses: {Er_by_max}, {Er_by_outer_half_slope}, {Er_by_inner_half_slope};  Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%")
+        #     print(f"Gamma guesses: {W_by_outer}, {W_by_inner}")
+        #     self.slope_energies = [max_slope_index, half_slope_1, half_slope_2, self.energy_array[max_index], 1.424839036*Ehs1-.4248390359*Em,-.7136756879*Ehs2+1.713675688*Em, f"Er guess diffs: {(Er_by_outer_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_inner_half_slope-Er_by_max)/(W_by_outer/2+W_by_inner/2)*100:.1f}%, {(Er_by_outer_half_slope-Er_by_inner_half_slope)/(W_by_outer/2+W_by_inner/2)*100:.1f}%"]
 
         if min(min_derivative, max_derivative) != 0:
             ratio = min(min_derivative, max_derivative) / max(min_derivative, max_derivative)

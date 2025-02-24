@@ -166,7 +166,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
             rhos = dos_array[v:v2]
             # valley_points.append([float(gamma_array[v]), float(energy_array[v])])
 
-            if not len(rhos):
+            if len(rhos) < 10:  # too few points
                 continue
 
             dp = DOSpeak(energies, rhos, gammas, root)  # descending sections can be added; for these, rel_ssr_per_point = 10**6, energy() = min(energies)
