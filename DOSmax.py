@@ -420,6 +420,8 @@ def generate_thresholds(z: int):
     thresholds.append(0)
     return thresholds
 
+# TODO: Usage guide on github
+
 def main(file):
     """
     Main function to manage the DOS fitting process.
@@ -427,7 +429,7 @@ def main(file):
     Parameters:
     file (str): The path to the file to process.
     """
-    display_timing = Files
+    display_timing = False
     if display_timing:
         start = time.time()
 
