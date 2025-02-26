@@ -608,7 +608,7 @@ def main(file):
                                     else:
                                         print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
 
-                            elif operator == '+R':  # todo: manually turning on a descending resonance doesn't activate it (due to min number conditions). Also, always require 3+ contributors to a resonance?
+                            elif operator == '+R':
                                 for idx in range(res_index, len(Resonance.resonances)):
                                     res = Resonance.resonances[idx]
                                     if res.threshold != threshold:
