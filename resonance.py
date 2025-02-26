@@ -30,6 +30,7 @@ class Resonance:
         self.index = len(self.resonances)
         self.resonances.append(self)
         self.threshold = None
+        self.manual_peak_selection = False  # to show manually selected resonances even if they don't fit the criteria
 
     def categorize_by_thresholds(self, thresholds):
         """
@@ -43,7 +44,9 @@ class Resonance:
             self.threshold = min(above)
 
     def should_be_shown(self):  # Show this resonance in lists&overview plot?
-        if self.best_fit is None:  # No good fit / manually deselected
+        if self.best_fit is not None and self.manual_peak_selection:  # always include manually chosen resonances
+            return None if self.best_fit.is_descending else True
+        if self.best_fit is None or len(self.peaks) < 3:  # No good fit / manually deselected
             return False
         if not self.best_fit.is_descending:  # at least one properly fit section
             return True
