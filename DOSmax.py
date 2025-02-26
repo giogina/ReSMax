@@ -427,14 +427,18 @@ def main(file):
     Parameters:
     file (str): The path to the file to process.
     """
-    # start = time.time()
+    display_timing = Files
+    if display_timing:
+        start = time.time()
 
     print(f"Processing file: {file}")
     data = parse(file)
 
-    # end = time.time()
-    # print("Parsing done ", end-start)
-    # start = end
+    if display_timing:
+        end = time.time()
+        print("Parsing done ", end-start)
+        print("Number of roots: ", len(data.keys()) - 1)
+        print("Number of gamma values: ", len(data["gamma"]))
 
     action = "o"  # overview plot
     low = None
@@ -524,7 +528,15 @@ def main(file):
             print("Invalid input format. Please input action in the form e.g. 'o -0.2 0'.")
     plot.start_clustering_background_preparation(data, thresholds)
 
+    if display_timing:
+        start = time.time()
+
     fitDOS(data, (low, high), thresholds, project_directory(file))
+
+    if display_timing:
+        end = time.time()
+        print("Fitting done ", end-start)
+        start = end
 
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None], default=0) # governs check loop and resonances.txt output cutoff!
     i = 1
