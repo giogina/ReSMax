@@ -196,8 +196,8 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
     resonances (list): List of Resonance objects containing associated peaks.
     """
 
-    norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
-    cmap = plt.cm.get_cmap("RdYlGn")  # Gradient from red to green
+    # norm = Normalize(vmin=1, vmax=4)  # Log scale for rel_SSR_per_point (10^-4 to 10^-1)
+    # cmap = plt.cm.get_cmap("RdYlGn")  # Gradient from red to green
 
     resonances_to_plot = (
         [resonances[resonance_index]] if resonance_index is not None and 0 <= resonance_index < len(resonances)
@@ -217,8 +217,9 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
         combined_ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         sorted_peaks = sorted(res.peaks, key=lambda p: p.root)
-        log_rel_ssrs = np.array([-np.log10(max(peak.rel_ssr_per_point, 0) + 1) for peak in sorted_peaks])
-        fit_colors = cmap(norm(log_rel_ssrs))
+        # log_rel_ssrs = np.array([-np.log10(max(peak.rel_ssr_per_point, 0) + 1) for peak in sorted_peaks])
+        # fit_colors = cmap(norm(log_rel_ssrs))
+        fit_colors = "black"
         for idx, peak in enumerate(sorted_peaks):
             ax = axs[idx+1]
             x_data = peak.energy_array
