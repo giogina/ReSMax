@@ -547,6 +547,7 @@ def main(file):
                           f"    'end': Skip remaining thresholds & print results\n"
                           f"    'iRj': For resonance #i, select the peak of root #j\n"
                           f"    'iR': De-select resonance #i\n"
+                          f"    'i+R': De-select all resonances from #i up to the threshold {threshold}\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n"
                           f"    'close': Close image viewer\n"
@@ -579,30 +580,69 @@ def main(file):
                     elif action.lower() == "close":
                         plot.close_files(project_directory(file))
                     else:
-                        changes = re.findall(r'(\d+)R(\d+)?', action)
+                        changes = re.findall(r'(\d+)(\+?R)(\d+)?', action)
                         if not len(changes):
                             print("Invalid input.")
                         changed_thresholds = []
                         for change in changes:
                             res_index = int(change[0])
-                            if res_index < len(Resonance.resonances):
-                                res = Resonance.resonances[res_index]
-                                if not res.threshold == threshold:
-                                    print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
-                                else:
-                                    if change[1]:
-                                        root_peaks = [p for p in res.peaks if p.root == int(change[1])]
-                                        if len(root_peaks):
-                                            res.best_fit = root_peaks[0]
-                                            res.energy = root_peaks[0].energy()
-                                            changed_thresholds.append(res.threshold)
+                            operator = change[1]
+                            root_index = int(change[2]) if change[2] else None
+
+                            if operator == 'R':
+                                if res_index < len(Resonance.resonances):
+                                    res = Resonance.resonances[res_index]
+                                    if res.threshold == threshold:
+                                        if root_index is not None:
+                                            root_peaks = [p for p in res.peaks if p.root == root_index]
+                                            if len(root_peaks):
+                                                res.best_fit = root_peaks[0]
+                                                res.manual_peak_selection = True
+                                                res.energy = root_peaks[0].energy()
+                                                changed_thresholds.append(res.threshold)
+                                            else:
+                                                print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
                                         else:
-                                            print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
+                                            res.best_fit = None
+                                            changed_thresholds.append(res.threshold)
                                     else:
-                                        res.best_fit = None
-                                        changed_thresholds.append(res.threshold)
-                        if i > 0 and threshold in changed_thresholds: # redo overview plot
+                                        print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
+
+                            elif operator == '+R':  # todo: manually turning on a descending resonance doesn't activate it (due to min number conditions). Also, always require 3+ contributors to a resonance?
+                                for idx in range(res_index, len(Resonance.resonances)):
+                                    res = Resonance.resonances[idx]
+                                    if res.threshold != threshold:
+                                        break
+                                    res.best_fit = None
+                                    changed_thresholds.append(res.threshold)
+
+                        if i > 0 and threshold in changed_thresholds:  # redo overview plot if necessary
                             plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range, threshold_above=threshold)
+                        
+                        # changes = re.findall(r'(\d+)R(\d+)?', action)
+                        # if not len(changes):
+                        #     print("Invalid input.")
+                        # changed_thresholds = []
+                        # for change in changes:
+                        #     res_index = int(change[0])
+                        #     if res_index < len(Resonance.resonances):
+                        #         res = Resonance.resonances[res_index]
+                        #         if not res.threshold == threshold:
+                        #             print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
+                        #         else:
+                        #             if change[1]:
+                        #                 root_peaks = [p for p in res.peaks if p.root == int(change[1])]
+                        #                 if len(root_peaks):
+                        #                     res.best_fit = root_peaks[0]
+                        #                     res.energy = root_peaks[0].energy()
+                        #                     changed_thresholds.append(res.threshold)
+                        #                 else:
+                        #                     print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
+                        #             else:
+                        #                 res.best_fit = None
+                        #                 changed_thresholds.append(res.threshold)
+                        # if i > 0 and threshold in changed_thresholds: # redo overview plot
+                        #     plot.resonance_partitions_with_clustering(data, Resonance.resonances, resonance_overview_range[0], resonance_overview_range[1], overview_plot_name, None, manual_range=manual_range, threshold_above=threshold)
                 except Exception as e:
                     print(f"Invalid input: {e}")
 
