@@ -420,8 +420,6 @@ def generate_thresholds(z: int):
     thresholds.append(0)
     return thresholds
 
-# TODO: Usage guide on github
-
 def main(file):
     """
     Main function to manage the DOS fitting process.
@@ -458,14 +456,14 @@ def main(file):
             redo_overview = False
             print(f"\nγ vs E overview graph has been plotted to {plot_file}.")
         next_action = input(f"Please specify your next action: \n\n"
-                            "    'o': Plot gamma vs E overview graph (full energy range).\n"
-                            "    'o E_min E_max': Re-plot gamma vs E overview graph (specified energy range).\n"
-                            "    'r': Fit density of state over the currently displayed range ({'-∞' if low is None else low}..{high})\n"
-                            "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
+                            "    'o': Plot stabilization diagram (full energy range).\n"
+                            "    'o E_min E_max': Plot stabilization diagram for E = E_min .. E_max.\n"
                             "    'z': input nuclear charge Z (default: Z = 2)\n"
                             "    't': input list of thresholds (default: [-Z^2/n^2/2, n = 1..20])\n"
-                            "    'p': Plot panorama log(DOS) vs E\n"
-                            "    'p E_min E_max': Plot panorama log(DOS) vs E for E = E_min..Emax\n"
+                            "    'p': Plot clustering panorama (log(DOS) vs E)\n"
+                            "    'p E_min E_max': Plot clustering panorama (log(DOS) vs E) for E = E_min..Emax\n"
+                            "    'r': Fit density of state over the currently displayed range ({'-∞' if low is None else low}..{high})\n"
+                            "    'r E_min E_max': Fit density of state in the range E_min..E_max\n"
                             "    'x': exit\n"
                             )
         try:
