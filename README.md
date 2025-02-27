@@ -7,3 +7,4 @@ Efficient, automated resonance detection using the Stabilization method.
 - Interactive command-line interface for manual resonance refinement.
 - Fast processing: Handles large datasets in seconds.
 - Outputs include stabilization diagrams, DOS plots, and resonance summaries.
+
