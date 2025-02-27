@@ -1,6 +1,12 @@
 # DOSmax
 Efficient, automated resonance detection using the Stabilization method.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage Guide](#usage-guide)
+- [License](#license)
+
 ## Features
 - Automated resonance detection with minimal user input.
 - Supports multiple input formats (.dat, .dal, .ou).
@@ -8,7 +14,7 @@ Efficient, automated resonance detection using the Stabilization method.
 - Fast processing: Handles large datasets in seconds.
 - Outputs include stabilization diagrams, DOS plots, and resonance summaries.
 
-## Installation
+# Installation
 
 Follow these steps to install and run **DOSmax** on your system.
 
@@ -47,13 +53,13 @@ Replace `path/to/input_file.dat` with the actual path to your input file.
 To run **DOSmax** from any directory, add it to your system PATH:
 
 #### On macOS/Linux  
-Append the following line to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
+Append the following line to your ````/.bashrc`, ````/.bash_profile`, or ````/.zshrc`:
 ```bash
 export PATH="$PATH:/path/to/DOSmax"
 ```
 Then, reload the shell configuration:
 ```bash
-source ~/.bashrc   # or ~/.zshrc, depending on your shell
+source ```/.bashrc   # or ```/.zshrc, depending on your shell
 ```
 
 #### On Windows  
@@ -74,5 +80,179 @@ DOSmax.py path/to/input_file.dat
 - Supported OS: Linux, macOS, and Windows  
 - No additional installations required: All dependencies are handled automatically by **DOSmax**.
 
+
+# Supported Input File Formats
+
+**DOSmax** accepts input files containing the **diagonalized eigenroot spectrum** for a range of values of the **basis set parameter** $\gamma$. The parser supports three file formats, which are identified automatically by their **file extensions**:
+
+
+### Tabular Format (`.dat`)
+- A **tab-delimited** or **space-delimited** file where:  
+  - The **first column** contains **γ values**.  
+  - Each **subsequent column** contains **energy values** \( E(\gamma, \text{root}) \) for a specific root.
+
+```text
+gamma_1    E_1_root1    E_1_root2    ...    E_1_rootN
+gamma_2    E_2_root1    E_2_root2    ...    E_2_rootN
+...
+gamma_M    E_M_root1    E_M_root2    ...    E_M_rootN
+```
+
+- **Notes:**  
+  - All rows must have the **same number of columns**.  
+  - **Missing values** are **not allowed**—ensure each γ value has corresponding energy entries for all roots.
+
+
+### Block-Structured Format (`.dal`)
+
+- A file divided into **blocks**, where
+  - each block starts with a **single γ value**,
+  - followed by the corresponding **energy values** for each root.
+  - **Blocks are separated by a blank line** (double newline).  
+
+```text
+gamma_1
+E_1_root1
+E_1_root2
+...
+E_1_rootN
+
+gamma_2
+E_2_root1
+E_2_root2
+...
+E_2_rootN
+```
+
+
+**Notes:**  
+- **No extra text** or comments are allowed between blocks.
+
+
+### Array-Based Format (`.ou`)
+
+- A file containing γ and energy values as arrays, specifically:
+  - A **single line** listing all **γ values**.  
+  - Subsequent sections, each corresponding to a **root**, listing all associated **energy values** for that root.
+
+```text
+gamma_1    gamma_2    ...    gamma_M
+
+# Energies for Root 1
+E_1_root1  E_2_root1  ...    E_M_root1
+
+# Energies for Root 2
+E_1_root2  E_2_root2  ...    E_M_root2
+```
+
+- **Notes:**  
+  - **γ values** must be listed **first** and **on one line**, separated by spaces or tabs.  
+  - Each **root’s energy array** must be on **a separate line**, following the γ array.
+  - The **first energy line** corresponds to **root 1**, the **second** to **root 2**, and so forth.
+
+---
+
+### Input Format Selection
+**DOSmax** detects the format **automatically** based on the **file extension**:
+- `.dat` → **Tabular format**  
+- `.dal` → **Block-structured format**  
+- `.ou`  → **Array-based format**  
+
+If an unsupported extension is provided, **DOSmax** will raise an error and list the **accepted formats**.
+
+
+### Important Notes:
+- Ensure **no extra blank lines** at the end of files.  
+- **File encoding:** UTF-8 is recommended.  
+- **Delimiter consistency:**  
+  - `.dat` files: Use either **tabs** or **consistent spaces**.  
+  - `.dal` and `.ou` files: Use **single spaces** or **tabs** between values.
+
+
+### Troubleshooting Input Files:
+- **Error:** `ValueError: could not convert string to float`  
+  - **Cause:** Non-numeric text or inconsistent formatting.  
+  - **Fix:** Check for **hidden characters** or **inconsistent delimiters**.
+
+- **Error:** `IndexError: list index out of range`  
+  - **Cause:** Missing energy entries for some roots.  
+  - **Fix:** Ensure **complete energy data** for each γ value and root.
+
+
+# Program workflow
+
+Follow these instructions to run **DOSmax** and interpret its outputs.
+
+## Run DOSmax
+
+Execute **DOSmax** with your input file:
+```bash
+python DOSmax.py -f path/to/input_file.dat
+```
+
+Replace `path/to/input_file.dat` with the actual path to your input file.
+
+All output files will be written to the directory `path/to/input_file/`, 
+therefore it is recommended to first move the input file to a convenient location.
+
+
+## Stabilization diagram and threshold inputs
+
+After loading and parsing a valid input file, a **stabilization diagram** is displayed:
+
+![Available commands](example/stab_he_1Se_singlet_combined/overview.png)
+
+Then, **DOSmax** enters the first interactive stage, which allows users to:
+- Visualize the stabilization diagram across various energy ranges.
+- Input a list of ionization threshold values, or a nuclear charge implicitly defining these thresholds. 
+- Initiate DOS calculations and automatic resonance detection, optionally restricted to a given range.
+
+![Available commands](example/2_threshold_input.png)
+
+Selecting the **`r`** command triggers the automatic detection or resonances, which takes about 2 seconds.
+
+## Output Files and Visualization
+
+Upon completion, **DOSmax** generates:
+
+- **results.txt:**  
+  - Tab-separated summary of all detected resonances, including:  
+    - **Energy** (\(E_r\))  
+    - **Width** (\(\Gamma\))  
+    - **Amplitude (A)**  
+    - **Baseline offset (\(y_0\))**  
+    - **Basis set parameter (\(\gamma(E_r)\))**
+
+- **Plot Outputs:**  
+  - **Stabilization diagrams**  
+  - **Resonance overview plots**  
+  - **Lorentzian fit plots** for each detected resonance
+
+---
+
+### 5. Example Workflow
+
+1. **Run DOSmax on an example file:**
+```bash
+python DOSmax.py example_data/sample_spectrum.dat
+```
+
+2. **Inspect the generated resonance overview plot:**  
+   - Located in the `/resonance_plots/` directory.  
+   - Shows highlighted plateau regions and detected resonance states.
+
+3. **Refine detected resonances using interactive commands** (e.g., `grid 1` to view all fits for the first resonance).
+
+4. **View final results** in `results.txt` for further analysis.
+
+---
+
+### 6. Verifying the Installation
+
+To confirm that **DOSmax** is installed and functioning correctly:
+```bash
+python DOSmax.py --help
+```
+This command displays the available options and confirms that the installation was successful.
 
 

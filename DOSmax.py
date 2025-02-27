@@ -427,7 +427,7 @@ def main(file):
     Parameters:
     file (str): The path to the file to process.
     """
-    display_timing = False
+    display_timing = True
     if display_timing:
         start = time.time()
 
@@ -448,7 +448,7 @@ def main(file):
     overview_margin = 0.03
     while action != "r":
         if redo_overview:
-            plot_file = project_directory(file) + "overview.png"
+            plot_file = project_directory(file) + "stabilization_diagram.png"
             plot.overview(data, plot_file, low, high, margin=overview_margin)
             data = computeDOS(data)
             if thresholds is None:
