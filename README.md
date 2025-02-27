@@ -200,7 +200,7 @@ therefore it is recommended to first move the input file to a convenient locatio
 
 After loading and parsing a valid input file, a **stabilization diagram** is displayed:
 
-![Available commands](example/stab_he_1Se_singlet_combined/overview.png)
+![Available commands](example/1_stabilization_diagram.png)
 
 Then, **DOSmax** enters the first interactive stage, which allows users to:
 - Visualize the stabilization diagram across various energy ranges.
@@ -208,6 +208,10 @@ Then, **DOSmax** enters the first interactive stage, which allows users to:
 - Initiate DOS calculations and automatic resonance detection, optionally restricted to a given range.
 
 ![Available commands](example/2_threshold_input.png)
+
+The panorama plot shows log10(DOS) over the entire energy range, with each root colored separately:
+
+![Available commands](example/stab_he_1Se_singlet_combined_dos_panorama.png)
 
 Selecting the **`r`** command triggers the automatic detection or resonances, which takes about 2 seconds.
 
@@ -227,32 +231,3 @@ Upon completion, **DOSmax** generates:
   - **Stabilization diagrams**  
   - **Resonance overview plots**  
   - **Lorentzian fit plots** for each detected resonance
-
----
-
-### 5. Example Workflow
-
-1. **Run DOSmax on an example file:**
-```bash
-python DOSmax.py example_data/sample_spectrum.dat
-```
-
-2. **Inspect the generated resonance overview plot:**  
-   - Located in the `/resonance_plots/` directory.  
-   - Shows highlighted plateau regions and detected resonance states.
-
-3. **Refine detected resonances using interactive commands** (e.g., `grid 1` to view all fits for the first resonance).
-
-4. **View final results** in `results.txt` for further analysis.
-
----
-
-### 6. Verifying the Installation
-
-To confirm that **DOSmax** is installed and functioning correctly:
-```bash
-python DOSmax.py --help
-```
-This command displays the available options and confirms that the installation was successful.
-
-
