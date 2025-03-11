@@ -578,7 +578,7 @@ def main(file):
                         break
                     elif action.lower().startswith("grid"):
                         _, n = action.split()
-                        plot.resonance_summary_grid(project_directory(file), Resonance.resonances, int(n), None)
+                        plot.resonance_summary_grid(project_directory(file), Resonance.resonances, int(n)-1, None)
                     elif action.startswith("plot"):
                         try:
                             _, emin, emax = action.split()
@@ -597,7 +597,7 @@ def main(file):
                             print("Invalid input.")
                         changed_thresholds = []
                         for change in changes:
-                            res_index = int(change[0])
+                            res_index = int(change[0])-1
                             operator = change[1]
                             root_index = int(change[2]) if change[2] else None
 
@@ -618,7 +618,7 @@ def main(file):
                                             res.best_fit = None
                                             changed_thresholds.append(res.threshold)
                                     else:
-                                        print(f"Resonance {res.index} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
+                                        print(f"Resonance {res.index+1} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")
 
                             elif operator == '+R':
                                 for idx in range(res_index, len(Resonance.resonances)):

@@ -180,7 +180,7 @@ def resonance_fits(project_dir, resonances, threshold=None):
         if res.best_fit is not None and not res.best_fit.is_descending:
             if threshold is None or res.threshold == threshold:
                 th_dir = threshold_dir(project_dir, res.threshold)
-                peak_fit(res.best_fit, f"{th_dir}[{res.index}]{res.energy:.8f}.png")
+                peak_fit(res.best_fit, f"{th_dir}[{res.index+1}]{res.energy:.8f}.png")
     if threshold is None:
         print(f"Plots saved to {project_dir}")
     else:
@@ -250,7 +250,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             ax.axis('off')
 
         plt.tight_layout()
-        output_file = f"{threshold_dir(project_dir, res.threshold)}[{res.index}]{res.energy:.8f}.png"
+        output_file = f"{threshold_dir(project_dir, res.threshold)}[{res.index+1}]{res.energy:.8f}.png"
         fig.savefig(output_file)
         plt.close('all')
         if resonance_index is not None:
@@ -444,7 +444,7 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
                 vertical_offset = 0.0016 * (emax-emin)
                 if emin < peak.energy()+vertical_offset < emax:
                     # ax1.text(peak.fit_gamma, peak.energy() + vertical_offset, f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal")
-                    texts_to_add.append(Text(x=peak.fit_gamma, y=peak.energy() + vertical_offset, text=f"{res.index}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit else "normal"))
+                    texts_to_add.append(Text(x=peak.fit_gamma, y=peak.energy() + vertical_offset, text=f"{res.index+1}R{peak.root}", fontsize=8, ha='center', va='bottom', color=annotation_color, fontweight="bold" if peak==res.best_fit and res.should_be_shown() else "normal"))
 
         res_gamma_all = np.concatenate(res_gammas) if res_gammas else np.array([])
         res_energy_all = np.concatenate(res_es) if res_es else np.array([])
@@ -465,7 +465,7 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
             annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
             ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
             ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
-            ax2.text(-4, res.energy, f"  [{res.index}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
+            ax2.text(-4, res.energy, f"  [{res.index+1}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
 
     ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)
 
