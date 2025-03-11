@@ -20,17 +20,22 @@ class Resonance:
         """
         if type(peak) is list:
             self.peaks = peak
-            fit_qualities = [p.rel_ssr_per_point for p in peak]
-            self.best_fit = self.peaks[fit_qualities.index(min(fit_qualities))]
-            self.energy = self.best_fit.energy()
+            self.best_fit = None
+            self.energy = None
         else:
             self.peaks = [peak]
             self.energy = peak.energy()
             self.best_fit = peak
+        self.select_best_fit()
         self.index = len(self.resonances)
         self.resonances.append(self)
         self.threshold = None
         self.manual_peak_selection = False  # to show manually selected resonances even if they don't fit the criteria
+
+    def select_best_fit(self):
+        fit_qualities = [p.rel_ssr_per_point for p in self.peaks]
+        self.best_fit = self.peaks[fit_qualities.index(min(fit_qualities))]
+        self.energy = self.best_fit.energy()
 
     def categorize_by_thresholds(self, thresholds):
         """

@@ -558,7 +558,7 @@ def main(file):
                         + (f"    'back': Return to previous threshold\n" if (i>1) else "") +
                           f"    'end': Skip remaining thresholds & print results\n"
                           f"    'iRj': For resonance #i, select the peak of root #j\n"
-                          f"    'iR': De-select resonance #i\n"
+                          f"    'iR': Toggle resonance #i on/off\n"
                           f"    'i+R': De-select all resonances from #i up to the threshold {threshold}\n"
                           f"    'grid i': Plot all DOS peaks for resonance #i\n"
                           f"    'plot Emin Emax': Create resonance overview plot for E=Emin..Emax\n"
@@ -615,7 +615,11 @@ def main(file):
                                             else:
                                                 print(f"Root {change[1]} does not contribute to Resonance {change[0]} at E={res.energy:.5f}; the change {change[0]}R{change[1]} is therefore skipped.")
                                         else:
-                                            res.best_fit = None
+                                            if (res.should_be_shown() != False):
+                                                res.best_fit = None
+                                            else:
+                                                res.manual_peak_selection = True
+                                                res.select_best_fit()
                                             changed_thresholds.append(res.threshold)
                                     else:
                                         print(f"Resonance {res.index+1} at E={res.energy:.5f} does not belong to current threshold {threshold}, and is therefore skipped.")

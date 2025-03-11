@@ -243,7 +243,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
 
             if peak == res.best_fit:
                 annotation = "<Selected>"
-                ax.text(0.5, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='center')
+                ax.text(0.1, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='left')
 
         # Hide unused subplots
         for ax in axs[len(res.peaks)+1:]:
