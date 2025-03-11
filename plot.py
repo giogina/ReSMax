@@ -219,7 +219,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
         sorted_peaks = sorted(res.peaks, key=lambda p: p.root)
         # log_rel_ssrs = np.array([-np.log10(max(peak.rel_ssr_per_point, 0) + 1) for peak in sorted_peaks])
         # fit_colors = cmap(norm(log_rel_ssrs))
-        fit_colors = "black"
+        fit_color = "black"
         for idx, peak in enumerate(sorted_peaks):
             ax = axs[idx+1]
             x_data = peak.energy_array
@@ -228,7 +228,7 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             if not peak.is_descending:
                 x_smooth = np.linspace(min(x_data), max(x_data), 1000)
                 y_smooth = peak.get_smooth_lorentzian_curve(x_smooth)
-                ax.plot(x_smooth, y_smooth, color=fit_colors[idx])
+                ax.plot(x_smooth, y_smooth, color=fit_color)
                 # y_smooth_guess = peak.get_smooth_guess_lorentzian_curve(x_smooth)  # debug plots for checking initial guesses - looking good!
                 # ax.plot(x_smooth, y_smooth_guess, color="blue")
                 ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
