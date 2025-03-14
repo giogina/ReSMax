@@ -210,8 +210,10 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
 
         combined_ax = axs[0]
         combined_ax.set_title("Combined DOS Points for All Contributing Peaks")
+        threshold = 0.005 * max([np.max(p.dos_array, 0) for p in res.peaks])
         for idx, peak in enumerate(res.peaks):
-            combined_ax.plot(peak.energy_array, peak.dos_array, '.', markersize=2, color=get_root_color(peak.root))
+            valid_indices = np.where(np.array(peak.dos_array) >= threshold)[0]
+            combined_ax.plot(peak.energy_array[valid_indices], peak.dos_array[valid_indices], '.', markersize=2, color=get_root_color(peak.root))
         combined_ax.set_xlabel("E (a.u.)")
         combined_ax.set_ylabel("DOS")
         combined_ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -476,14 +478,17 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
         if hasattr(artist, 'set_rasterized'):
             artist.set_rasterized(True)
 
-    ax1.set_xlabel("gamma")
+    ax1.set_xlabel("γ")
     ax2.set_xlabel("log(DOS)")
     ax1.set_ylabel("Energy (a.u.)")
     ax1.set_ylim(emin, emax)
     # ax1.set_title("Partitioned Sections of DOS by Resonance")
     ax2.set_xlim(-4, 0.1)
     ax2.tick_params(left=False, labelleft=False)
-    # plt.ioff()  # Turn off interactive mode if accidentally enabled
+    plt.minorticks_on()
+    ax1.xaxis.set_minor_locator(AutoMinorLocator(4))
+    ax2.xaxis.set_minor_locator(AutoMinorLocator(4))
+    ax1.yaxis.set_minor_locator(AutoMinorLocator(4))
     plt.subplots_adjust(wspace=0)
 
     fig.savefig(output_file, pil_kwargs={'compress_level': 1})
