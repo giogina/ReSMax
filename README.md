@@ -200,18 +200,18 @@ therefore it is recommended to first move the input file to a convenient locatio
 
 After loading and parsing a valid input file, a **stabilization diagram** is displayed:
 
-![Available commands](example/1_stabilization_diagram.png)
+![Available commands](manual/1_stabilization_diagram.png)
 
 Then, **DOSmax** enters the first interactive stage, which allows users to:
 - Visualize the stabilization diagram across various energy ranges.
 - Input a list of ionization threshold values, or a nuclear charge implicitly defining these thresholds. 
 - Initiate DOS calculations and automatic resonance detection, optionally restricted to a given range.
 
-![Available commands](example/2_threshold_input.png)
+![Available commands](manual/2_threshold_input.png)
 
 The panorama plot shows log10(DOS) over the entire energy range, with each root colored separately:
 
-![Available commands](example/stab_he_1Se_singlet_combined_dos_panorama.png)
+![Available commands](manual/stab_he_1Se_singlet_combined_dos_panorama.png)
 
 Selecting the **`r`** command triggers the automatic detection or resonances, which takes about 2 seconds.
 
