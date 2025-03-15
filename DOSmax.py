@@ -179,7 +179,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
             if dp.energy() is not None and dp.energy() > lowest_populated_threshold and dp.warning is None:
                 fitted_peaks_by_root[root].append(dp)
 
-    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)  # also uncomment the valley_points.append above to activate
+    # plot.plot_partitions(data, fitted_peaks_by_root, project_dir+"partitions.png", valley_points)  # also uncomment the valley_points.append above to activate red split points
 
     print(" Finding resonances...")
     find_resonances(fitted_peaks_by_root)
@@ -432,7 +432,7 @@ def main(file):
     Parameters:
     file (str): The path to the file to process.
     """
-    display_timing = True
+    display_timing = False
     if display_timing:
         start = time.time()
 
