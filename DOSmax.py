@@ -148,9 +148,14 @@ def fitDOS(data, energy_range, thresholds, project_dir):
         energy_array = energy_array[mask]
         gamma_array = data["gamma"][1:-1][mask]
         dos_array = data[key][mask]
+        if len(energy_array) < 10:
+            continue
+        deriv_array = np.gradient(energy_array, gamma_array)  # to prevent the two-index jump in DOS from obscuring things
+
 
         fitted_peaks_by_root[root] = []
-        valley_indices, _ = signal.find_peaks(-dos_array)
+        # valley_indices, _ = signal.find_peaks(-dos_array)
+        valley_indices, _ = signal.find_peaks(deriv_array)
 
         valley_indices = [i for i in valley_indices if dos_array[i] >= 0]  # only cut on ascends, not in the middle of descending pieces.
         if len(valley_indices) < 2 or dos_array[1] > dos_array[0]:
@@ -159,7 +164,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
             valley_indices = np.concatenate([valley_indices, np.array([len(dos_array) - 1])])
 
         for iv in range(0, len(valley_indices) - 1):
-            v = int(valley_indices[iv])
+            v = int(valley_indices[iv])+1
             v2 = int(valley_indices[iv+1])
             energies = energy_array[v:v2]
             gammas = gamma_array[v:v2]
