@@ -11,13 +11,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, hsv_to_rgb
 from matplotlib.gridspec import GridSpec
 from matplotlib.text import Text
-from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import ScalarFormatter, AutoMinorLocator, MultipleLocator, FormatStrFormatter, MaxNLocator, \
+    AutoLocator, LogLocator, NullFormatter, FixedLocator
 from matplotlib.transforms import Affine2D
 
 
 def get_root_color(rootnr: int, alpha=1.):
     saturation = 1
-    value = 0.8
+    value = 0.7
     hue = (rootnr * 222.5+15) % 360
     hue /= 360.0
     rgb = hsv_to_rgb((hue, saturation, value))
@@ -54,6 +55,16 @@ def peak_fit(dos_peak, file):
     dos_peak (DOSpeak): The DOSpeak object containing the fitted data.
     file (str): The path where the plot should be saved.
     """
+
+    plt.rcParams.update({
+        "font.size": 14,  # default font size
+        "axes.titlesize": 16,  # title font
+        "axes.labelsize": 14,  # x/y label font
+        "xtick.labelsize": 14,  # x-tick font
+        "ytick.labelsize": 14,  # y-tick font
+        "legend.fontsize": 14,
+    })
+
     x_data = dos_peak.energy_array
     y_data = dos_peak.dos_array
     xmin, xmax = dos_peak.energy()-8*dos_peak.fit_Gamma, dos_peak.energy()+8*dos_peak.fit_Gamma
@@ -64,6 +75,8 @@ def peak_fit(dos_peak, file):
     plt.plot(x_smooth, y_smooth, 'r-')
     plt.xlabel("Energy (a.u.)")
     plt.ylabel("DOS")
+    plt.minorticks_on()
+    # plt.xaxis.set_minor_locator(AutoMinorLocator(5))
     plt.xlim(xmin, xmax)
     plt.savefig(file)
     plt.close('all')
@@ -87,7 +100,8 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
     Returns:
     tuple: Minimum and maximum energy values plotted.
     """
-    plt.figure(figsize=(32, 24))
+    # plt.figure(figsize=(32, 24))
+    plt.figure(figsize=(16, 12))
     min_E = 0 if from_e is None else from_e
     max_E = -100 if to_e is None else to_e
 
@@ -99,12 +113,22 @@ def overview(data, plot_file, from_e=None, to_e=None, margin = 0.03):
             if to_e is None:
                 max_E = max(max_E, max(values))
 
-    plt.xlabel("γ")
-    plt.ylabel("Energy (a.u.)")
+    labelSize = 20
+    plt.xlabel("γ", fontsize=labelSize, labelpad=int(1.0*labelSize))
+    plt.ylabel("Energy (a.u.)", fontsize=labelSize, labelpad=int(1.0*labelSize))
+    plt.tick_params(axis='both', which='major', labelsize=labelSize)
+    plt.minorticks_on()
+    plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
+    plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
     plt.ylim(bottom=min_E - margin, top=max_E + margin)
+    plt.tick_params(axis='both', which='major', length=10, width=2, pad=10)  # Major ticks larger
+    plt.tick_params(axis='both', which='minor', length=5, width=1, pad=10)  # Minor ticks slightly smaller
     plt.locator_params(axis='x', nbins=20)
     plt.locator_params(axis='y', nbins=20)
-    plt.minorticks_on()
+    ax = plt.gca()  # Get current axis
+    ax.xaxis.set_major_locator(MultipleLocator(0.05))
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    plt.tight_layout()
 
     plt.savefig(plot_file)
     plt.clf()  # Clear figure
@@ -204,19 +228,53 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
         else resonances
     )
 
+    grid_width = 2
+
+    plt.rcParams.update({
+        "font.size": 16,  # default font size
+        "axes.titlesize": 18,  # title font
+        "axes.labelsize": 16,  # x/y label font
+        "xtick.labelsize": 16,  # x-tick font
+        "ytick.labelsize": 16,  # y-tick font
+        "legend.fontsize": 16,
+    })
+
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits((-3, 3))
+    formatter.set_useOffset(False)  # disables +offset shifting
+
     for res in resonances_to_plot:
-        fig, axs = plt.subplots(nrows=((len(res.peaks)+1) // 3) + 1, ncols=3, figsize=(18, 6 * (((len(res.peaks)+1) // 3) + 1)))
+        nrrows = ((len(res.peaks)+1) // grid_width) + 1
+        fig, axs = plt.subplots(nrows=nrrows, ncols=grid_width, figsize=(grid_width*6, 6*nrrows))
         axs = axs.flatten()
 
         combined_ax = axs[0]
-        combined_ax.set_title("Combined DOS Points for All Contributing Peaks")
+        combined_ax.set_title("Combined DOS Points\nfor All Contributing Peaks")
         threshold = 0.005 * max([np.max(p.dos_array, 0) for p in res.peaks])
         for idx, peak in enumerate(res.peaks):
             valid_indices = np.where(np.array(peak.dos_array) >= threshold)[0]
             combined_ax.plot(peak.energy_array[valid_indices], peak.dos_array[valid_indices], '.', markersize=2, color=get_root_color(peak.root))
-        combined_ax.set_xlabel("E (a.u.)")
+        combined_ax.set_xlabel("Energy (a.u.)")
         combined_ax.set_ylabel("DOS")
-        combined_ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+        # combined_ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+        combined_ax.xaxis.set_major_formatter(formatter)
+        combined_ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='both'))
+        combined_ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+        combined_ax.ticklabel_format(style='sci', axis='y', scilimits=(-1, 1))  # Use scientific notation if numbers are too large/small
+        combined_ax.yaxis.get_offset_text().set_horizontalalignment('right')
+
+        majorticks = combined_ax.get_xticks()
+        step = np.diff(majorticks).min()
+        minor_step = 10 ** (np.ceil(np.log10(step)) - 1)
+        xmin, xmax = combined_ax.get_xlim()
+        minor_ticks = np.arange(np.floor(xmin / minor_step) * minor_step, np.ceil(xmax / minor_step) * minor_step, minor_step)
+        # print(step, minor_step, xmin, xmax, np.floor(xmin / minor_step) * minor_step, np.ceil(xmax / minor_step) * minor_step)
+
+        combined_ax.xaxis.set_minor_locator(FixedLocator(minor_ticks))
+        combined_ax.xaxis.set_minor_formatter(NullFormatter())
+        combined_ax.tick_params(axis='both', which='major', length=6, width=1.5)
+        combined_ax.tick_params(axis='both', which='minor', length=4, width=1.0)
 
         sorted_peaks = sorted(res.peaks, key=lambda p: p.root)
         # log_rel_ssrs = np.array([-np.log10(max(peak.rel_ssr_per_point, 0) + 1) for peak in sorted_peaks])
@@ -233,19 +291,35 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
                 ax.plot(x_smooth, y_smooth, color=fit_color)
                 # y_smooth_guess = peak.get_smooth_guess_lorentzian_curve(x_smooth)  # debug plots for checking initial guesses - looking good!
                 # ax.plot(x_smooth, y_smooth_guess, color="blue")
-                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, G = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
+                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}\nG = {peak.fit_Gamma:.6f}, Err = {peak.rel_ssr_per_point:.3e}")
             else:
-                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}, \n[!] Energy descending with growing gamma [!]", color='red')
+                ax.set_title(f"Root {peak.root}, E = {peak.energy():.6f}\n[!] Energy descending [!]\n with growing gamma", color='red')
 
             ax.scatter(x_data, y_data, edgecolor=get_root_color(peak.root), facecolor='white')
             ax.set_xlabel("Energy (a.u.)")
             ax.set_ylabel("DOS")
-            ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
-            ax.ticklabel_format(style='sci', axis='x', scilimits=(-2, 2))  # Use scientific notation if numbers are too large/small
+
+            ax.xaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='both'))
+
+            xmin, xmax = ax.get_xlim()
+            minor_ticks = np.arange(np.floor(xmin / minor_step) * minor_step, np.ceil(xmax / minor_step) * minor_step, minor_step)
+            ax.xaxis.set_minor_locator(FixedLocator(minor_ticks))
+            ax.xaxis.set_minor_formatter(NullFormatter())
+
+            ax.tick_params(axis='both', which='major', length=6, width=1.5)
+            ax.tick_params(axis='both', which='minor', length=4, width=1.0)
+
+            # ax.yaxis.set_major_formatter(FormatStrFormatter('%.0e'))
+            # ax.xaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=True))
+            # ax.ticklabel_format(style='sci', axis='x', scilimits=(-1, 1))  # Use scientific notation if numbers are too large/small
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(-1, 1))  # Use scientific notation if numbers are too large/small
+            ax.yaxis.get_offset_text().set_horizontalalignment('right')
 
             if peak == res.best_fit:
                 annotation = "<Selected>"
-                ax.text(0.1, 0.95, annotation, transform=ax.transAxes, fontsize=16, verticalalignment='top', horizontalalignment='left')
+                ax.text(0.1, 0.95, annotation, transform=ax.transAxes, fontsize=18, verticalalignment='top', horizontalalignment='left')
 
         # Hide unused subplots
         for ax in axs[len(res.peaks)+1:]:
@@ -422,7 +496,8 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
         if best_fit is not None and best_fit.fit_Gamma is not None:
             emin = max(best_fit.energy() - 10 * best_fit.fit_Gamma, emin)
 
-    fig = plt.figure(figsize=(21, 12))
+    # fig = plt.figure(figsize=(21, 12))
+    fig = plt.figure(figsize=(15, 5))
     gs = GridSpec(1, 2, width_ratios=[16, 4], height_ratios=[9])
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1], sharey=ax1)
@@ -459,17 +534,24 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
         ax1.add_artist(text_obj)
 
     rotation = Affine2D().rotate_deg(90)  # Rotate rhs plot 90 degrees counterclockwise
-    for res in resonances:
-        if emin < res.energy < emax and res.best_fit is not None:
-            show = res.should_be_shown()
-            if show is False:
-                continue
-            annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
-            ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
-            ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
-            ax2.text(-4, res.energy, f"  [{res.index+1}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
-
     ax2.plot(plot_arrays[f"energies_{threshold_above}"], plot_arrays[f"log10_rhos_{threshold_above}"], '.', markersize=2, color="gray", transform=rotation + ax2.transData)
+
+    text_height = 0.03*(emax-emin)
+    prev_res = None
+    shown_resonances = [r for r in resonances if emin < r.energy < emax and r.best_fit is not None and (r.should_be_shown() is not False)]
+    for i, res in enumerate(shown_resonances):
+        show = res.should_be_shown()
+        annotation_color = 'black' if show is True else 'red'  # resonances marked (show = None) as based only on descending sections are marked red
+        ax1.axhline(res.energy, color=get_root_color(res.index), linestyle="--", linewidth=1, alpha=0.2)
+        ax2.axhline(res.energy, color=get_root_color(res.index, alpha=0.5), linestyle="--", linewidth=1)
+
+        next_res = shown_resonances[i+1] if (i+1<len(shown_resonances)) else None
+        if (next_res is not None) and (next_res.energy-res.energy < text_height) and ((prev_res is None) or (res.energy - prev_res.energy > 2*text_height)):
+            ax2.text(-4, res.energy-0.0*text_height, f"  [{res.index+1}] {res.energy:.6f}", ha="left", va="top", fontsize=8, color=annotation_color)
+        else:
+            ax2.text(-4, res.energy+0.0*text_height, f"  [{res.index+1}] {res.energy:.6f}", ha="left", va="bottom", fontsize=8, color=annotation_color)
+        prev_res = res
+
 
     for artist in ax1.get_children():
         if hasattr(artist, 'set_rasterized'):
@@ -482,14 +564,18 @@ def resonance_partitions_with_clustering(data, resonances, emin, emax, output_fi
     ax2.set_xlabel("log(DOS)")
     ax1.set_ylabel("Energy (a.u.)")
     ax1.set_ylim(emin, emax)
+
+    # plt.tick_params(axis='both', which='major', labelsize=12, length=12, width=2, pad=15)  # Major tick adjustments
+    # plt.tick_params(axis='both', which='minor', length=6, width=1.5)
     # ax1.set_title("Partitioned Sections of DOS by Resonance")
     ax2.set_xlim(-4, 0.1)
     ax2.tick_params(left=False, labelleft=False)
     plt.minorticks_on()
-    ax1.xaxis.set_minor_locator(AutoMinorLocator(4))
-    ax2.xaxis.set_minor_locator(AutoMinorLocator(4))
-    ax1.yaxis.set_minor_locator(AutoMinorLocator(4))
+    ax1.xaxis.set_minor_locator(AutoMinorLocator(5))
+    ax2.xaxis.set_minor_locator(AutoMinorLocator(5))
+    ax1.yaxis.set_minor_locator(AutoMinorLocator(5))
     plt.subplots_adjust(wspace=0)
+    plt.subplots_adjust(bottom=0.15)
 
     fig.savefig(output_file, pil_kwargs={'compress_level': 1})
     plt.close('all')
@@ -534,6 +620,7 @@ def plot_partitions(data, fitted_peaks_by_root, output_file, points):
     plt.xlabel("Gamma")
     plt.ylabel("Energy (a.u.)")
     plt.ylim(-0.7, -0.5)
+    # plt.ylim(-0.52, -0.515)
     plt.title("Partitioned Sections of DOS by Root")
     plt.savefig(output_file)
     plt.close('all')
