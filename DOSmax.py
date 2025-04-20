@@ -431,7 +431,7 @@ def main(file):
     Main function to manage the DOS fitting process.
 
     Parameters:
-    file (str): The path to the file to process.   # TODO: for cat-stab example, MBS are under the 0.5 threshold. Make sure first plot starts above.
+    file (str): The path to the file to process.
     """
     display_timing = False
     if display_timing:
