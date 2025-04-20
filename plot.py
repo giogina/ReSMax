@@ -180,12 +180,18 @@ def close_files(output_path):
             pass
 
 
+def plots_dir(project_dir):
+    sep = '\\' if '\\' in project_dir else '/'
+    pd = f"{project_dir}resonance_plots{sep}"
+    if not os.path.exists(pd):
+        os.mkdir(pd)
+    return pd
+
+
 def threshold_dir(project_dir, threshold):
     sep = '\\' if '\\' in project_dir else '/'
-    plots_dir = f"{project_dir}resonance_plots{sep}"
-    if not os.path.exists(plots_dir):
-        os.mkdir(plots_dir)
-    thres_dir = f"{plots_dir}{threshold:.5f}{sep}"
+    pd = plots_dir(project_dir)
+    thres_dir = f"{pd}{threshold:.5f}{sep}"
     if not os.path.exists(thres_dir):
         os.mkdir(thres_dir)
     return thres_dir

@@ -431,7 +431,7 @@ def main(file):
 
     Parameters:
     file (str): The path to the file to process.   # TODO: for cat-stab example, MBS are under the 0.5 threshold. Make sure first plot starts above.
-    """                                            # TODO: Panorama not being saved in plots folder
+    """
     display_timing = False
     if display_timing:
         start = time.time()
@@ -483,7 +483,7 @@ def main(file):
             elif next_action.lower() == 'x':
                 exit()
             elif next_action.lower() == 'p':
-                plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file)[:-1] + "_dos_panorama.png")
+                plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file) + "dos_panorama.png")
             elif next_action.lower() == 'z':
                 ok = False
                 while not ok:
@@ -518,7 +518,7 @@ def main(file):
                         redo_overview = True
                         overview_margin = 0
                     if action == "p":
-                        plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file)[:-1] + f"_dos_panorama_{low}_{high}.png", low, high)
+                        plot.plot_all_resonance_peaks(data, Resonance.resonances, project_directory(file) + f"dos_panorama_{low}_{high}.png", low, high)
                 elif len(response) == 1 and response[0] == "o":  # reset overview
                     low = None
                     high = 0
