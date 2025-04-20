@@ -186,6 +186,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
     for res in Resonance.resonances:
         res.categorize_by_thresholds(thresholds)
     Resonance.resonances.sort(key=lambda r: r.energy)
+    return lowest_populated_threshold
 
                 
 def print_result_file(max_threshold, result_file):
@@ -536,7 +537,7 @@ def main(file):
     if display_timing:
         start = time.time()
 
-    fitDOS(data, (low, high), thresholds, project_directory(file))
+    lowest_populated_threshold = fitDOS(data, (low, high), thresholds, project_directory(file))
 
     if display_timing:
         end = time.time()
@@ -546,6 +547,9 @@ def main(file):
     max_thr = max([r.threshold for r in Resonance.resonances if r.threshold is not None], default=0) # governs check loop and resonances.txt output cutoff!
     i = 1
     while i<len(thresholds):
+        if thresholds[i] <= lowest_populated_threshold:
+            i = i + 1
+            continue
         threshold = thresholds[i]
         resonance_overview_range = [thresholds[i-1], threshold]
         overview_plot_name = f"{plot.threshold_dir(project_directory(file), threshold)}all_resonances_{threshold:.3f}.png"
