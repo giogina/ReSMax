@@ -64,8 +64,6 @@ Before running **DOSmax**, you need:
 
 Instructions vary by operating system:
 
----
-
 ### Windows
 
 1. Download and install Python from [https://www.python.org/downloads](https://www.python.org/downloads).
@@ -76,7 +74,6 @@ During installation, check:
 
 2. Install Git from [https://git-scm.com](https://git-scm.com)
 
----
 
 ### Linux (Debian/Ubuntu)
 
@@ -85,7 +82,6 @@ During installation, check:
     sudo apt install python3 python3-pip python3-venv git
 ```
 
----
 ### macOS
 
 1. Install **Homebrew** (if not already available):
@@ -232,8 +228,6 @@ E_1_root1  E_2_root1  ...    E_M_root1
 E_1_root2  E_2_root2  ...    E_M_root2
 ```
 
----
-
 ### Troubleshooting Input Files:
 - **Error:** `ValueError: could not convert string to float`  
   - **Cause:** Non-numeric text or inconsistent formatting.  
@@ -246,7 +240,7 @@ E_1_root2  E_2_root2  ...    E_M_root2
 
 # Program workflow
 
-Follow these instructions to run **DOSmax** and interpret its outputs. In the following, the workflow is demonstrated on the input file [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal) which can be found in the example/ directory of this repository.
+Follow these instructions to run **DOSmax** and interpret its outputs. In the following, the workflow is demonstrated on the input file [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), which can be found in the example/ directory of this repository.
 
 All output files are written to a directory of the same name as the input file, in our case `he_1Po_InfMass/`. Therefore, it is recommended to first move the input file to a convenient location before running **DOSmax**.
 

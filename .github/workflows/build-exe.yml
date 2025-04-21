@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: windows-latest
 
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -27,8 +30,11 @@ jobs:
       run: |
         pyinstaller --onefile DOSmax.py
 
-    - name: Upload .exe artifact
-      uses: actions/upload-artifact@v4
+    - name: Upload .exe to GitHub Release
+      uses: softprops/action-gh-release@v1
       with:
-        name: DOSmax-exe
-        path: dist/DOSmax.exe
+        name: DOSmax v${{ github.run_number }}
+        tag_name: v${{ github.run_number }}
+        files: dist/DOSmax.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
