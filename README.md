@@ -47,7 +47,7 @@ Download citation files here:
 
 
 ### System Requirements:
-- Python version: 3.10  
+- Python version: 3.10+
 - Supported OS: Linux, macOS, and Windows
 
 Follow these steps to install and run **DOSmax** on your system.
