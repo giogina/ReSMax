@@ -45,11 +45,65 @@ Download citation files here:
 
 # Installation
 
+
+### System Requirements:
+- Python version: 3.10  
+- Supported OS: Linux, macOS, and Windows
+
 Follow these steps to install and run **DOSmax** on your system.
+
+
+## 1. Prerequisites
+
+Before running **DOSmax**, you need:
+
+- **Python 3.10+**
+- **`pip`** (Python package installer)
+- **`venv`** (Python virtual environment module)
+- **`git`** (to clone the repository)
+
+Instructions vary by operating system:
 
 ---
 
-## 1. Clone the Repository  
+### Windows
+
+1. Download and install Python from [https://www.python.org/downloads](https://www.python.org/downloads).
+During installation, check:
+     - **Add Python to PATH**
+     - **Install `pip`**
+     - **Install `venv`**
+
+2. Install Git from [https://git-scm.com](https://git-scm.com)
+
+---
+
+### Linux (Debian/Ubuntu)
+
+```bash
+    sudo apt update
+    sudo apt install python3 python3-pip python3-venv git
+```
+
+---
+### macOS
+
+1. Install **Homebrew** (if not already available):
+
+ ```bash
+     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ ```
+
+2. Install Python and git:
+
+ ```bash
+    brew install python git
+ ```
+
+> Homebrew's Python includes `pip` and `venv` by default.
+
+
+## 2. Clone the Repository
 Clone the **DOSmax** repository from GitHub and navigate into the project directory:
 
 ```bash
@@ -58,32 +112,49 @@ Clone the **DOSmax** repository from GitHub and navigate into the project direct
 
 This downloads the latest version of **DOSmax** locally.
 
----
+On first startup, if any dependencies are missing, **DOSmax** automatically sets up a virtual environment and downloads the required libraries using `pip`.
 
-## 2. (Optional) Install Requirements  
-**DOSmax** automatically installs required libraries during the first run. However, you can install them manually:
+Alternatively, if you'd rather install packages system-wide:
 ```bash
+    cd DOSmax/
     pip install -r requirements.txt
 ```
+This will cause **DOSmax** to run using the system-wide Python.
 
----
+
 
 ## 3. Run DOSmax
 
-### All operating systems:
+### Windows
+
+In Windows systems, run **DOSmax** using the console command:
+```bash
+   py path/to/DOSmax.py -f path/to/input_file.dat
+```
+
+If that doesn't work, try:
+```bash
+   python path/to/DOSmax.py -f path/to/input_file.dat
+```
+
+### Linux / macOS
+
 You can now execute **DOSmax** with your input file:
 ```bash
    python3 path/to/DOSmax.py -f path/to/input_file.dat
 ```
 Replace `path/to/input_file.dat` with the actual path to your input file.
 
-### Linux / macOS:
-
-On Linux or macOS systems, you can run the script directly via 
+On Linux or macOS systems, you can run the script directly (without calling python3) via 
 ```bash
     path/to/DOSmax.py -f path/to/input_file.dat
 ```
-Optionally, to run **DOSmax** from any directory, add it to your system PATH by appending the following line to your ````/.bashrc````, ````/.bash_profile````, or ````/.zshrc````:
+For this to work, the `./DOSmax.py` script must be executable, which should be the case when cloned from GitHub. If it is not, run:
+```bash
+   chmod +x DOSmax.py
+```
+
+Optionally, to run **DOSmax** from any directory, add it to your system PATH by appending the following line to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
 ```bash
     export PATH="$PATH:/path/to/DOSmax"
 ```
@@ -92,23 +163,6 @@ Then, reload the shell configuration:
     source ~/.bashrc   # or ~/.bash_profile or ~/.zshrc, depending on your shell
 ```
 
-#### On Windows  
-1. Search for **"Environment Variables"** in the Start menu.  
-2. Select **"Edit the system environment variables"**.  
-3. Click **"Environment Variables"** → Under **System variables**, select **Path** → **Edit**.  
-4. Click **"New"** and add the path to the **DOSmax** folder (e.g., `C:\Users\YourName\DOSmax`).  
-
-After setting the PATH, you can simply run:
-```bash
-DOSmax.py path/to/input_file.dat
-```
-
----
-
-### System Requirements:
-- Python version: 3.10  
-- Supported OS: Linux, macOS, and Windows  
-- No additional installations required: All dependencies are handled automatically by **DOSmax**.
 
 
 # Supported Input File Formats

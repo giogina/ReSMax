@@ -6,10 +6,42 @@ import subprocess
 import importlib.util
 import importlib.metadata
 import time
+import platform
 
 verbose = False
 
 # Freeze: pyinstaller --onefile DOSmax.py
+
+def in_venv():
+    return (
+        hasattr(sys, 'real_prefix') or  # legacy venvs
+        (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+    )
+
+def create_and_reexec_in_venv():
+    venv_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "venv")
+    if not os.path.exists(venv_dir):
+        print("Creating virtual environment...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "venv", venv_dir])
+        except subprocess.CalledProcessError as e:
+            print("Failed to create virtual environment. This is likely because the `python3-venv` package is missing.")
+            if platform.system() == "Linux":
+                print("\nFix it with:")
+                print("  sudo apt install python3-venv\n")
+            elif platform.system() == "Darwin":
+                print("Try reinstalling Python via Homebrew: `brew install python`")
+            elif platform.system() == "Windows":
+                print("Please re-run the Python installer and enable 'pip' and 'venv' features.")
+            sys.exit(1)
+
+    # Determine path to Python inside venv
+    if platform.system() == "Windows":
+        venv_python = os.path.join(venv_dir, "Scripts", "python.exe")
+    else:
+        venv_python = os.path.join(venv_dir, "bin", "python")
+
+    os.execv(venv_python, [venv_python] + sys.argv)
 
 def install_requirements():
     """Ensure all required dependencies are installed."""
@@ -34,6 +66,10 @@ def install_requirements():
 
     # Install missing dependencies
     if missing:
+
+        if not in_venv():
+            create_and_reexec_in_venv()
+
         print(f"Installing missing dependencies: {', '.join(missing)}, please wait...")
 
         try:
@@ -51,14 +87,14 @@ def install_requirements():
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
                 import pip
             except Exception:
-                import platform
+
                 os_name = platform.system()
                 if os_name == "Linux":
                     pip_hint = "Try:\nsudo apt install python3-pip\n(or use your distro's package manager)"
                 elif os_name == "Darwin":
                     pip_hint = "Try:\nbrew install python  (this includes pip)"
                 elif os_name == "Windows":
-                    pip_hint = "Open the Python installer and choose 'Modify', then enable pip,\n or reinstall Python from https://python.org and make sure to check 'Add Python to PATH'."
+                    pip_hint = "Open the Python installer and choose 'Modify', then enable pip and venv,\n or reinstall Python from https://python.org and make sure to check 'Add Python to PATH'."
                 else:
                     pip_hint = "Please refer to your system's instructions for installing pip."
 
@@ -69,7 +105,7 @@ def install_requirements():
             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
             print("All required packages installed successfully.")
         except subprocess.CalledProcessError:
-            print(f"Error installing packages. Please install them manually using\n  cd {os.path.dirname(os.path.abspath(__file__))}\n  pip install -r requirements.txt")
+            print(f"Error auto-installing packages. Please install them manually using\n  cd {os.path.dirname(os.path.abspath(__file__))}\n  pip install -r requirements.txt")
             exit(1)
 
 install_requirements()
