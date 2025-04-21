@@ -266,9 +266,9 @@ Then, **DOSmax** enters the first interactive stage, which allows users to:
 
 The panorama plot shows log10(DOS) over the entire energy range, with each root colored separately:
 
-![Available commands](manual/stab_he_1Se_singlet_combined_dos_panorama.png)
+![](example/he_1Po_InfMass/dos_panorama.png)
 
-Selecting the **`r`** command triggers the automatic detection or resonances, which takes about 2 seconds.
+Selecting the **`r`** command triggers the automatic detection of resonances, which takes about 2 seconds.
 
 ## Output Files and Visualization
 
