@@ -49,46 +49,47 @@ Follow these steps to install and run **DOSmax** on your system.
 
 ---
 
-### 1. Clone the Repository  
+## 1. Clone the Repository  
 Clone the **DOSmax** repository from GitHub and navigate into the project directory:
 
 ```bash
-git clone https://github.com/giogina/DOSmax.git
-cd DOSmax
+    git clone https://github.com/giogina/DOSmax.git
 ```
 
 This downloads the latest version of **DOSmax** locally.
 
 ---
 
-### 2. (Optional) Install Requirements  
+## 2. (Optional) Install Requirements  
 **DOSmax** automatically installs required libraries during the first run. However, you can install them manually:
 ```bash
-pip install -r requirements.txt
+    pip install -r requirements.txt
 ```
 
 ---
 
-### 3. Run DOSmax  
+## 3. Run DOSmax
+
+### All operating systems:
 You can now execute **DOSmax** with your input file:
 ```bash
-python path/to/DOSmax.py -f path/to/input_file.dat
+   python3 path/to/DOSmax.py -f path/to/input_file.dat
 ```
 Replace `path/to/input_file.dat` with the actual path to your input file.
 
----
+### Linux / macOS:
 
-### 4. (Optional) Add DOSmax to Your PATH  
-To run **DOSmax** from any directory, add it to your system PATH:
-
-#### On macOS/Linux  
-Append the following line to your ````/.bashrc`, ````/.bash_profile`, or ````/.zshrc`:
+On Linux or macOS systems, you can run the script directly via 
 ```bash
-export PATH="$PATH:/path/to/DOSmax"
+    path/to/DOSmax.py -f path/to/input_file.dat
+```
+Optionally, to run **DOSmax** from any directory, add it to your system PATH by appending the following line to your ````/.bashrc````, ````/.bash_profile````, or ````/.zshrc````:
+```bash
+    export PATH="$PATH:/path/to/DOSmax"
 ```
 Then, reload the shell configuration:
 ```bash
-source ```/.bashrc   # or ```/.zshrc, depending on your shell
+    source ~/.bashrc   # or ~/.bash_profile or ~/.zshrc, depending on your shell
 ```
 
 #### On Windows  

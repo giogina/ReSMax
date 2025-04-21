@@ -19,7 +19,7 @@ def install_requirements():
         return
 
     # Check for requirements.txt
-    req_file = "requirements.txt"
+    req_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
     if not os.path.exists(req_file):
         print("No requirements.txt found. Skipping dependency check.")
         return
@@ -50,15 +50,27 @@ def install_requirements():
                 subprocess.check_call([sys.executable, "-m", "ensurepip"])
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
                 import pip
-            except Exception as e:
-                print(f"Failed to install pip: {e}")
-                return
+            except Exception:
+                import platform
+                os_name = platform.system()
+                if os_name == "Linux":
+                    pip_hint = "Try:\nsudo apt install python3-pip\n(or use your distro's package manager)"
+                elif os_name == "Darwin":
+                    pip_hint = "Try:\nbrew install python  (this includes pip)"
+                elif os_name == "Windows":
+                    pip_hint = "Open the Python installer and choose 'Modify', then enable pip,\n or reinstall Python from https://python.org and make sure to check 'Add Python to PATH'."
+                else:
+                    pip_hint = "Please refer to your system's instructions for installing pip."
+
+                print(f"\nFailed to install pip automatically. {pip_hint}")
+                exit(1)
 
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
             print("All required packages installed successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error installing packages: {e}")
+        except subprocess.CalledProcessError:
+            print(f"Error installing packages. Please install them manually using\n  cd {os.path.dirname(os.path.abspath(__file__))}\n  pip install -r requirements.txt")
+            exit(1)
 
 install_requirements()
 
