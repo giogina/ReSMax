@@ -177,7 +177,7 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
 <details>
 <summary><strong>Tabular Format (`.dat`)</strong></summary>
 
-- A tab-delimited or space-delimited file where:  
+A tab-delimited or space-delimited file where:  
   - The first column contains **γ values**.  
   - Each subsequent column contains **energy values** E(γ, root) for a specific root.
 
