@@ -48,7 +48,7 @@ Download citation files here:
 
 ### System Requirements:
 - Python version: 3.10+
-- Supported OS: Linux, macOS, and Windows
+- Supported OS: Linux, macOS, and Windows 10+.
 
 Follow these steps to install and run **DOSmax** on your system.
 
@@ -154,7 +154,11 @@ For this to work, the `./DOSmax.py` script must be executable, which should be t
    chmod +x DOSmax.py
 ```
 
-Optionally, to run **DOSmax** from any directory, add it to your system PATH by appending the following line to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
+Optionally, to call **DOSmax** from any directory as
+```bash
+    DOSmax.py -f path/to/input_file.dat
+```
+add it to your system PATH by appending the following line to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
 ```bash
     export PATH="$PATH:/path/to/DOSmax"
 ```
@@ -169,6 +173,12 @@ Then, reload the shell configuration:
 
 **DOSmax** accepts input files containing the **diagonalized eigenroot spectrum** for a range of values of the **basis set parameter** $\gamma$. The parser supports three file formats, which are identified automatically by their **file extensions**:
 
+- `.dat` → **Tabular format**  
+- `.dal` → **Block-structured format**  
+- `.ou`  → **Array-based format**  
+
+If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
+
 
 ### Tabular Format (`.dat`)
 - A **tab-delimited** or **space-delimited** file where:  
@@ -181,11 +191,6 @@ gamma_2    E_2_root1    E_2_root2    ...    E_2_rootN
 ...
 gamma_M    E_M_root1    E_M_root2    ...    E_M_rootN
 ```
-
-- **Notes:**  
-  - All rows must have the **same number of columns**.  
-  - **Missing values** are **not allowed**—ensure each γ value has corresponding energy entries for all roots.
-
 
 ### Block-Structured Format (`.dal`)
 
@@ -208,9 +213,7 @@ E_2_root2
 E_2_rootN
 ```
 
-
-**Notes:**  
-- **No extra text** or comments are allowed between blocks.
+An example file of this structure, [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), is available in the example/ directory.
 
 
 ### Array-Based Format (`.ou`)
@@ -229,20 +232,7 @@ E_1_root1  E_2_root1  ...    E_M_root1
 E_1_root2  E_2_root2  ...    E_M_root2
 ```
 
-- **Notes:**  
-  - **γ values** must be listed **first** and **on one line**, separated by spaces or tabs.  
-  - Each **root’s energy array** must be on **a separate line**, following the γ array.
-  - The **first energy line** corresponds to **root 1**, the **second** to **root 2**, and so forth.
-
 ---
-
-### Input Format Detection
-**DOSmax** detects the format **automatically** based on the **file extension**:
-- `.dat` → **Tabular format**  
-- `.dal` → **Block-structured format**  
-- `.ou`  → **Array-based format**  
-
-If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
 
 ### Troubleshooting Input Files:
 - **Error:** `ValueError: could not convert string to float`  
@@ -256,33 +246,23 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
 
 # Program workflow
 
-Follow these instructions to run **DOSmax** and interpret its outputs. An example input file, [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), which was used to create the outputs shown below, is available in the example/ directory of this repository.  
+Follow these instructions to run **DOSmax** and interpret its outputs. In the following, the workflow is demonstrated on the input file [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal) which can be found in the example/ directory of this repository.
 
-## Run DOSmax
-
-Execute **DOSmax** with your input file:
-```bash
-python DOSmax.py -f path/to/input_file.dat
-```
-
-Replace `path/to/input_file.dat` with the actual path to your input file.
-
-All output files will be written to the directory `path/to/input_file/`, 
-therefore it is recommended to first move the input file to a convenient location.
+All output files are written to a directory of the same name as the input file, in our case `he_1Po_InfMass/`. Therefore, it is recommended to first move the input file to a convenient location before running **DOSmax**.
 
 
 ## Stabilization diagram and threshold inputs
 
 After loading and parsing a valid input file, a **stabilization diagram** is displayed:
 
-![Available commands](manual/1_stabilization_diagram.png)
+![](example/he_1Po_InfMass/stabilization_diagram.png)
 
 Then, **DOSmax** enters the first interactive stage, which allows users to:
 - Visualize the stabilization diagram across various energy ranges.
 - Input a list of ionization threshold values, or a nuclear charge implicitly defining these thresholds. 
 - Initiate DOS calculations and automatic resonance detection, optionally restricted to a given range.
 
-![Available commands](manual/2_threshold_input.png)
+![](manual/2_threshold_input.png)
 
 The panorama plot shows log10(DOS) over the entire energy range, with each root colored separately:
 
