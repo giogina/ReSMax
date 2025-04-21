@@ -20,7 +20,16 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
 
 
 ## How to cite
+If you use **DOSmax** in your research, please cite the following article (currently in preparation):
 
+> Johanna Langner, Anjan Sadhukhan, Henryk A. Witek, and Jayanta K. Saha.  
+> *An efficient algorithm to determine the resonance parameters of three-body systems using the stabilization method: A case study for natural parity 1,3L^π (L = 0, 1) doubly-excited resonance states of helium*.  
+> Manuscript in preparation, 2025.  
+> [https://github.com/giogina/DOSmax](https://github.com/giogina/DOSmax)
+ 
+Download citation files here:
+- [BibTeX](./cite/DOSmax.bib)
+- [RIS](./cite/DOSmax.ris)
 
 ## Table of Contents
 
