@@ -45,7 +45,6 @@ Download citation files here:
 
 # Installation
 
-
 ### System Requirements:
 - Python version: 3.10+
 - Supported OS: Linux, macOS, and Windows 10+.
@@ -251,26 +250,34 @@ After loading and parsing a valid input file, a **stabilization diagram** is dis
 
 ![](example/he_1Po_InfMass/stabilization_diagram.png)
 
-Then, **DOSmax** enters the first interactive stage, which allows users to:
-- Visualize the stabilization diagram across various energy ranges.
-- Input a list of ionization threshold values, or a nuclear charge implicitly defining these thresholds. 
-- Initiate DOS calculations and automatic resonance detection, optionally restricted to a given range.
+Then, **DOSmax** enters the first interactive stage:
 
 ![](manual/2_threshold_input.png)
 
-The panorama plot shows log10(DOS) over the entire energy range, with each root colored separately:
+### Thresholds
+Here, the ionization threshold of the investigated few-body system can be entered in two different ways: Either by inputting the nuclear charge Z of a helium-like atom, which causes the thresholds to be computed as -Z^2/n^2/2 for n ranging from 1 to 20, or by directly entering a list of thresholds. By default, the ionization thresholds for the helium atom (Z=2) are used.
+
+### DOS panorama
+
+The panorama plot is a scatter plot of log10(DOS) over the entire energy range for all roots, with each root colored separately:
 
 ![](example/he_1Po_InfMass/dos_panorama.png)
 
-
 <div style="overflow-x: auto; white-space: nowrap;">
-  <img src="example/he_1Po_InfMass/dos_panorama.png" alt="Wide DOS panorama plot" style="max-height: 500px;">
+  <a href="example/he_1Po_InfMass/dos_panorama.png" target="_blank">
+    <img src="example/he_1Po_InfMass/dos_panorama.png" alt="DOS panorama plot" style="max-height: 400px;">
+  </a>
 </div>
 
+This plot gives a clear visual representation of the resonance energies in the form of accumulative peaks, which also makes it clear which peaks are reliable (i.e., clusters of clearly separated higher DOS values), and which are not (in noisy regions below the thresholds).
+
+### Initiate Resonance detection
 
 Selecting the **`r`** command triggers the automatic detection of resonances, which takes about 2 seconds.
 
-## Output Files and Visualization
+## DOS Peak Fitting and Resonance Detection
+## Manual Resonance Refinement
+## Output Files
 
 Upon completion, **DOSmax** generates:
 
@@ -288,7 +295,5 @@ Upon completion, **DOSmax** generates:
   - **Lorentzian fit plots** for each detected resonance
 
 
-## DOS Peak Fitting and Resonance Detection
-## Manual Resonance Refinement
-## Output Files
+
 # Licence
