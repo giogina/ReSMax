@@ -177,10 +177,9 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
 <details>
 <summary><strong>Tabular Format (`.dat`)</strong></summary>
 
-- A **tab-delimited** or **space-delimited** file where:  
-  - The **first column** contains **γ values**.  
-  - Each **subsequent column** contains **energy values** \( E(\gamma, \text{root}) \) for a specific root.
-</details>
+- A tab-delimited or space-delimited file where:  
+  - The first column contains **γ values**.  
+  - Each subsequent column contains **energy values** E(γ, root) for a specific root.
 
 ```text
 gamma_1    E_1_root1    E_1_root2    ...    E_1_rootN
@@ -188,6 +187,7 @@ gamma_2    E_2_root1    E_2_root2    ...    E_2_rootN
 ...
 gamma_M    E_M_root1    E_M_root2    ...    E_M_rootN
 ```
+</details>
 
 ### Block-Structured Format (`.dal`)
 
