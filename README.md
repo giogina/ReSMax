@@ -262,6 +262,12 @@ The panorama plot shows log10(DOS) over the entire energy range, with each root 
 
 ![](example/he_1Po_InfMass/dos_panorama.png)
 
+
+<div style="overflow-x: auto; white-space: nowrap;">
+  <img src="example/he_1Po_InfMass/dos_panorama.png" alt="Wide DOS panorama plot" style="max-height: 500px;">
+</div>
+
+
 Selecting the **`r`** command triggers the automatic detection of resonances, which takes about 2 seconds.
 
 ## Output Files and Visualization
