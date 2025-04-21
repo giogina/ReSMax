@@ -1,18 +1,38 @@
 # DOSmax
-Efficient, automated resonance detection using the Stabilization method.
+**Efficient, automated resonance detection using the Stabilization Method.**
+
+**DOSmax** is a Python tool for identifying resonance states in quantum few-body systems, such as helium-like atoms, using the Stabilization Method. This technique analyzes how energy eigenvalues evolve with a systematically varied basis set parameter, revealing metastable bound states as well as resonance states, which appear as characteristic plateaus in the eigenvalue spectrum.
+
+**DOSmax** automates the full workflow: it computes the density of states (DOS) for each root, segments and fits DOS peaks using Lorentzian profiles, groups them into resonances, and extracts resonance parameters (energy and width) from the best-fitting DOS peaks — all with minimal manual input. Results can be interactively inspected and refined via plots and command-line controls, allowing for careful manual validation.
+
+The tool is designed for reproducibility and efficient large-scale analysis of stabilization data, helping researchers extract physical resonance parameters quickly and consistently.
+
+## Features
+- Automated resonance detection from stabilization diagrams with minimal user input.
+- Supports multiple input formats (.dat, .dal, .ou).
+- Interactive command-line interface for manual resonance refinement.
+- Fast processing: Handles large datasets in seconds.
+- Outputs
+  - Stabilization diagram plots,
+  - Global DOS vs. energy panorama plots,
+  - Summary table of detected resonances and their fitted parameters,
+  - DOS peak & Lorentzian fit plots.
+
+
+## How to cite
+
 
 ## Table of Contents
 
 - [Installation](#installation)
-- [Usage Guide](#usage-guide)
+- [Input File Formats](#supported-input-file-formats)
+- [Program Workflow](#program-workflow)
+  - [Run DOSmax](#run-dosmax)
+  - [Stabilization Diagram and Threshold Inputs](#stabilization-diagram-and-threshold-inputs)
+  - [DOS Peak Fitting and Resonance Detection](#dos-peak-fitting-and-resonance-detection)
+  - [Manual Resonance Refinement](#manual-resonance-refinement)
+  - [Output Files](#output-files)
 - [License](#license)
-
-## Features
-- Automated resonance detection with minimal user input.
-- Supports multiple input formats (.dat, .dal, .ou).
-- Interactive command-line interface for manual resonance refinement.
-- Fast processing: Handles large datasets in seconds.
-- Outputs include stabilization diagrams, DOS plots, and resonance summaries.
 
 # Installation
 
@@ -152,22 +172,13 @@ E_1_root2  E_2_root2  ...    E_M_root2
 
 ---
 
-### Input Format Selection
+### Input Format Detection
 **DOSmax** detects the format **automatically** based on the **file extension**:
 - `.dat` → **Tabular format**  
 - `.dal` → **Block-structured format**  
 - `.ou`  → **Array-based format**  
 
-If an unsupported extension is provided, **DOSmax** will raise an error and list the **accepted formats**.
-
-
-### Important Notes:
-- Ensure **no extra blank lines** at the end of files.  
-- **File encoding:** UTF-8 is recommended.  
-- **Delimiter consistency:**  
-  - `.dat` files: Use either **tabs** or **consistent spaces**.  
-  - `.dal` and `.ou` files: Use **single spaces** or **tabs** between values.
-
+If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
 
 ### Troubleshooting Input Files:
 - **Error:** `ValueError: could not convert string to float`  
@@ -181,7 +192,7 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
 
 # Program workflow
 
-Follow these instructions to run **DOSmax** and interpret its outputs.
+Follow these instructions to run **DOSmax** and interpret its outputs. An example input file, [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), which was used to create the outputs shown below, is available in the example/ directory of this repository.  
 
 ## Run DOSmax
 
@@ -231,3 +242,9 @@ Upon completion, **DOSmax** generates:
   - **Stabilization diagrams**  
   - **Resonance overview plots**  
   - **Lorentzian fit plots** for each detected resonance
+
+
+## DOS Peak Fitting and Resonance Detection
+## Manual Resonance Refinement
+## Output Files
+# Licence
