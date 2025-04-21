@@ -244,7 +244,7 @@ Follow these instructions to run **DOSmax** and interpret its outputs. In the fo
 All output files are written to a directory of the same name as the input file, in our case `he_1Po_InfMass/`. Therefore, it is recommended to first move the input file to a convenient location before running **DOSmax**.
 
 
-## Stabilization diagram and threshold inputs
+## Stabilization Diagram and Threshold Inputs
 
 After loading and parsing a valid input file, a **stabilization diagram** is displayed:
 
@@ -257,26 +257,32 @@ Then, **DOSmax** enters the first interactive stage:
 ### Thresholds
 Here, the ionization threshold of the investigated few-body system can be entered in two different ways: Either by inputting the nuclear charge Z of a helium-like atom, which causes the thresholds to be computed as -Z^2/n^2/2 for n ranging from 1 to 20, or by directly entering a list of thresholds. By default, the ionization thresholds for the helium atom (Z=2) are used.
 
-### DOS panorama
+### DOS Panorama
 
 The panorama plot is a scatter plot of log10(DOS) over the entire energy range for all roots, with each root colored separately:
 
 ![](example/he_1Po_InfMass/dos_panorama.png)
 
-<div style="overflow-x: auto; white-space: nowrap;">
-  <a href="example/he_1Po_InfMass/dos_panorama.png" target="_blank">
-    <img src="example/he_1Po_InfMass/dos_panorama.png" alt="DOS panorama plot" style="max-height: 400px;">
-  </a>
-</div>
-
 This plot gives a clear visual representation of the resonance energies in the form of accumulative peaks, which also makes it clear which peaks are reliable (i.e., clusters of clearly separated higher DOS values), and which are not (in noisy regions below the thresholds).
 
-### Initiate Resonance detection
+### Initiate Resonance Detection
 
 Selecting the **`r`** command triggers the automatic detection of resonances, which takes about 2 seconds.
 
 ## DOS Peak Fitting and Resonance Detection
+
+### Metastable Bound States
+The automatic analysis of the stabilization diagram begins by listing the metastable bound states (MBS), which are detected as local energy minima below the lowest populated ionization threshold. The MBS are listed together with the value of the basis set parameter gamma at which they appear. If the minimum appears very close to either end of the gamma range, a warning is issued; these MBS can likely be improved by widening the investigated range of gamma in the underlying stabilization diagram computation. The printed MBS are also listed in the `results.txt` file.
+
+![](manual/3_MBS.png)
+
 ## Manual Resonance Refinement
+
+The DOS curves for each root are now sectioned into individual peaks, which are then fitted to Lorentzian curves, and classified into resonances. The result is first shown graphically in form of a stabilization diagram in which the plateaus corresponding to each DOS peak are highlighted, and colored according to their respective resonance.
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/all_resonances_-0.500.png)
+
+
 ## Output Files
 
 Upon completion, **DOSmax** generates:
