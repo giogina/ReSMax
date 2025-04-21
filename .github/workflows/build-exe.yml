@@ -28,7 +28,7 @@ jobs:
         pyinstaller --onefile DOSmax.py
 
     - name: Upload .exe artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DOSmax-exe
         path: dist/DOSmax.exe
