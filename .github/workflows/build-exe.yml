@@ -2,15 +2,16 @@ name: Build DOSmax Windows EXE
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - "v*.*.*"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#    env:
+#      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - name: Checkout repo
@@ -31,9 +32,8 @@ jobs:
         pyinstaller --onefile DOSmax.py
 
     - name: Upload .exe to GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ github.run_number }}
-        files: dist/DOSmax.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        files: DOSmax.exe
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
