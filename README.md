@@ -63,7 +63,8 @@ Before running **DOSmax**, you need:
 
 Instructions vary by operating system:
 
-### Windows
+<details>
+<summary><strong>Windows</strong></summary>
 
 1. Download and install Python from [https://www.python.org/downloads](https://www.python.org/downloads).
 During installation, check:
@@ -73,15 +74,19 @@ During installation, check:
 
 2. Install Git from [https://git-scm.com](https://git-scm.com)
 
+</details>
 
-### Linux (Debian/Ubuntu)
+<details>
+<summary><strong>Linux (Debian/Ubuntu)</strong></summary>
 
 ```bash
     sudo apt update
     sudo apt install python3 python3-pip python3-venv git
 ```
 
-### macOS
+</details>
+<details>
+<summary><strong>macOS</strong></summary>
 
 1. Install **Homebrew** (if not already available):
 
@@ -96,7 +101,7 @@ During installation, check:
  ```
 
 > Homebrew's Python includes `pip` and `venv` by default.
-
+</details>
 
 ## 2. Clone the Repository
 Clone the **DOSmax** repository from GitHub and navigate into the project directory:
@@ -172,8 +177,8 @@ Then, reload the shell configuration:
 <summary><strong>Tabular Format (.dat)</strong></summary>
 
 - A **tab-delimited** or **space-delimited** file where:  
-  - The **first column** contains **γ values**.  
-  - Each **subsequent column** contains **energy values** \( E(\gamma, \text{root}) \) for a specific root.
+  - The **first column** contains **$\gamma$ values**.  
+  - Each **subsequent column** contains **energy values** $E(\gamma, \text{root}) $ for a specific root.
 
 ```text
 gamma_1    E_1_root1    E_1_root2    ...    E_1_rootN
@@ -187,7 +192,7 @@ gamma_M    E_M_root1    E_M_root2    ...    E_M_rootN
 <summary><strong>Block-Structured Format (.dal)</strong></summary>
 
 - A file divided into **blocks**, where
-  - each block starts with a **single γ value**,
+  - each block starts with a **single $\gamma$ value**,
   - followed by the corresponding **energy values** for each root.
   - **Blocks are separated by a blank line** (double newline).  
 
@@ -210,7 +215,7 @@ An example file of this structure, [he_1Po_InfMass.dal](example/he_1Po_InfMass.d
 <details>
 <summary><strong>Array-Based Format (.ou)</strong></summary>
 
-- A file containing γ and energy values as arrays, specifically:
+- A file containing $\gamma$ and energy values as arrays, specifically:
   - A **single line** listing all **γ values**.  
   - Subsequent sections, each corresponding to a **root**, listing all associated **energy values** for that root.
 
@@ -272,7 +277,7 @@ Selecting the **`r`** command triggers the automatic detection of resonances, wh
 ## DOS Peak Fitting and Resonance Detection
 
 ### Metastable Bound States
-The automatic analysis of the stabilization diagram begins by listing the metastable bound states (MBS), which are detected as local energy minima below the lowest populated ionization threshold. The MBS are listed together with the value of the basis set parameter gamma at which they appear. If the minimum appears very close to either end of the gamma range, a warning is issued; these MBS can likely be improved by widening the investigated range of gamma in the underlying stabilization diagram computation. The printed MBS are also listed in the `results.txt` file.
+The automatic analysis of the stabilization diagram begins by listing the metastable bound states (MBS), which are detected as local energy minima below the lowest populated ionization threshold. The MBS are listed together with the value of the basis set parameter $\gamma$ at which they appear. If the minimum appears very close to either end of the $\gamma$ range, a warning is issued; these MBS can likely be improved by widening the investigated range of $\gamma$ in the underlying stabilization diagram computation. The printed MBS are also listed in the `results.txt` file.
 
 ![](manual/3_MBS.png)
 
