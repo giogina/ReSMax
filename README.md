@@ -168,18 +168,12 @@ Then, reload the shell configuration:
 
 **DOSmax** accepts input files containing the **diagonalized eigenroot spectrum** for a range of values of the **basis set parameter** $\gamma$. The parser supports three file formats, which are identified automatically by their **file extensions**:
 
-- `.dat` → **Tabular format**  
-- `.dal` → **Block-structured format**  
-- `.ou`  → **Array-based format**  
-
-If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
-
 <details>
-<summary><strong>Tabular Format (`.dat`)</strong></summary>
+<summary><strong>Tabular Format (.dat)</strong></summary>
 
-A tab-delimited or space-delimited file where:  
-  - The first column contains **γ values**.  
-  - Each subsequent column contains **energy values** E(γ, root) for a specific root.
+- A **tab-delimited** or **space-delimited** file where:  
+  - The **first column** contains **γ values**.  
+  - Each **subsequent column** contains **energy values** \( E(\gamma, \text{root}) \) for a specific root.
 
 ```text
 gamma_1    E_1_root1    E_1_root2    ...    E_1_rootN
@@ -189,7 +183,8 @@ gamma_M    E_M_root1    E_M_root2    ...    E_M_rootN
 ```
 </details>
 
-### Block-Structured Format (`.dal`)
+<details>
+<summary><strong>Block-Structured Format (.dal)</strong></summary>
 
 - A file divided into **blocks**, where
   - each block starts with a **single γ value**,
@@ -209,11 +204,11 @@ E_2_root2
 ...
 E_2_rootN
 ```
-
 An example file of this structure, [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), is available in the example/ directory.
+</details>
 
-
-### Array-Based Format (`.ou`)
+<details>
+<summary><strong>Array-Based Format (.ou)</strong></summary>
 
 - A file containing γ and energy values as arrays, specifically:
   - A **single line** listing all **γ values**.  
@@ -228,6 +223,9 @@ E_1_root1  E_2_root1  ...    E_M_root1
 # Energies for Root 2
 E_1_root2  E_2_root2  ...    E_M_root2
 ```
+</details>
+
+If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
 
 ### Troubleshooting Input Files:
 - **Error:** `ValueError: could not convert string to float`  
