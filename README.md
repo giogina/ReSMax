@@ -125,7 +125,9 @@ This will cause **DOSmax** to run using the system-wide Python.
 
 ## 3. Run DOSmax
 
-### Windows
+
+<details>
+<summary><strong>Windows</strong></summary>
 
 In Windows systems, run **DOSmax** using the console command:
 ```bash
@@ -136,8 +138,11 @@ If that doesn't work, try:
 ```bash
    python path/to/DOSmax.py -f path/to/input_file.dat
 ```
+</details>
 
-### Linux / macOS
+
+<details>
+<summary><strong>Linux / macOS</strong></summary>
 
 You can now execute **DOSmax** with your input file:
 ```bash
@@ -166,7 +171,7 @@ Then, reload the shell configuration:
 ```bash
     source ~/.bashrc   # or ~/.bash_profile or ~/.zshrc, depending on your shell
 ```
-
+</details>
 
 
 # Supported Input File Formats
