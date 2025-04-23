@@ -112,16 +112,17 @@ Clone the **DOSmax** repository from GitHub and navigate into the project direct
 
 This downloads the latest version of **DOSmax** locally.
 
+
+<details><summary>Optional: Manually install dependencies.</summary>
 On first startup, if any dependencies are missing, **DOSmax** automatically sets up a virtual environment and downloads the required libraries using `pip`.
 
-Alternatively, if you'd rather install packages system-wide:
+Alternatively, if you would rather install packages system-wide:
 ```bash
     cd DOSmax/
     pip install -r requirements.txt
 ```
 This will cause **DOSmax** to run using the system-wide Python.
-
-
+</details>
 
 ## 3. Run DOSmax
 
@@ -140,24 +141,21 @@ If that doesn't work, try:
 ```
 </details>
 
-
 <details>
 <summary><strong>Linux / macOS</strong></summary>
 
 You can now execute **DOSmax** with your input file:
-```bash
-   python3 path/to/DOSmax.py -f path/to/input_file.dat
-```
-Replace `path/to/input_file.dat` with the actual path to your input file.
 
-On Linux or macOS systems, you can run the script directly (without calling python3) via 
 ```bash
     path/to/DOSmax.py -f path/to/input_file.dat
 ```
-For this to work, the `./DOSmax.py` script must be executable, which should be the case when cloned from GitHub. If it is not, run:
+Replace `path/to/input_file.dat` with the actual path to your input file.
+For this to work (without calling python3), the `./DOSmax.py` script must be executable, which should be the case when cloned from GitHub. If it is not, first run:
 ```bash
    chmod +x DOSmax.py
 ```
+
+<details><summary>Optional: Modify system PATH variable.</summary>
 
 Optionally, to call **DOSmax** from any directory as
 ```bash
@@ -171,6 +169,8 @@ Then, reload the shell configuration:
 ```bash
     source ~/.bashrc   # or ~/.bash_profile or ~/.zshrc, depending on your shell
 ```
+
+</details>
 </details>
 
 
@@ -237,7 +237,10 @@ E_1_root2  E_2_root2  ...    E_M_root2
 
 If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
 
-### Troubleshooting Input Files:
+
+<details>
+<summary><strong>Troubleshooting Input Files</strong></summary>
+
 - **Error:** `ValueError: could not convert string to float`  
   - **Cause:** Non-numeric text or inconsistent formatting.  
   - **Fix:** Check for **hidden characters** or **inconsistent delimiters**.
@@ -246,6 +249,7 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
   - **Cause:** Missing energy entries for some roots.  
   - **Fix:** Ensure **complete energy data** for each γ value and root.
 
+</details>
 
 # Program workflow
 
