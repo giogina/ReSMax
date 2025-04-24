@@ -18,6 +18,11 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
   - Summary table of detected resonances and their fitted parameters,
   - DOS peak & Lorentzian fit plots.
 
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/all_resonances_-0.500.png)
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png)
+
+
 
 ## How to cite
 If you use **DOSmax** in your research, please cite the following article (currently in preparation):
