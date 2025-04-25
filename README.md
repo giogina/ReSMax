@@ -297,7 +297,7 @@ Selecting the **`r`** command triggers the automatic detection of resonances, wh
 ### Metastable Bound States
 The automatic analysis of the stabilization diagram begins by listing the metastable bound states (MBS), which are detected as local energy minima below the lowest populated ionization threshold. The MBS are listed together with the value of the basis set parameter $\gamma$ at which they appear. If the minimum appears very close to either end of the $\gamma$ range, a warning is issued; these MBS can likely be improved by widening the investigated range of $\gamma$ in the underlying stabilization diagram computation. The printed MBS are also listed in the `results.txt` file.
 
-![](manual/3_MBS.png)
+![](manual/5_plot_action.png)
 
 ## Manual Resonance Refinement
 
@@ -317,6 +317,9 @@ Upon completion, **DOSmax** generates:
     - **Amplitude (A)**  
     - **Baseline offset (\(y_0\))**  
     - **Basis set parameter (\(\gamma(E_r)\))**
+
+
+![](manual/3_MBS.png)
 
 - **Plot Outputs:**  
   - **Stabilization diagrams**  
