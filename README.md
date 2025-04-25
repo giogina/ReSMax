@@ -328,6 +328,7 @@ By inputting `p` or `pn`, these plots are generated for all thresholds or the $n
   </a>
 </div>
 
+Additionally, for each plotted DOS peak, a `.txt` file of the same name is created, in which the energy and DOS arrays for the DOS data points as well as the fitted Lorentzian curve are given. Using this data, the plot shown above can be re-created in any data visualizer of choice.
 
 
 # Licence
