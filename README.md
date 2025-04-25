@@ -301,9 +301,24 @@ The automatic analysis of the stabilization diagram begins by listing the metast
 
 ## Manual Resonance Refinement
 
-The DOS curves for each root are now sectioned into individual peaks, which are then fitted to Lorentzian curves, and classified into resonances. The result is first shown graphically in form of a stabilization diagram in which the plateaus corresponding to each DOS peak are highlighted, and colored according to their respective resonance.
+The DOS curves for each root are now automatically sectioned into individual peaks, which are then fitted to Lorentzian curves, and classified into resonances. The result is shown graphically, for each ionization threshold, in form of a stabilization diagram in which the plateaus corresponding to each DOS peak are highlighted, and colored according to their respective resonance.
 
 ![](example/he_1Po_InfMass/resonance_plots/-0.50000/all_resonances_-0.500.png)
+
+Each plateau is given a label of the form `iRj`, where `i` specifies the resonance number, and `j` the root number. On the right side of the plot, an accumulative scatter plot diplays $\log_{10}(\text{DOS})$ on the horizontal axis vs. the energy on the vertical axis. This gives additional confirmation as to how well the roots stabilize along each resonance. 
+
+In some cases, the algorithm for automatic selection of best-fitting peaks for each resonance makes a wrong choice. For example, in the plot above, the plateau selected for the resonance number 7 is clearly not a very appropriate one. In such situations, manual refinemens can be made via an interactive loop:
+
+![](manual/4_refinement_menu.png)
+
+To address the issue observed in our example case, we can first plot a zoomed-in version of the overview stabilization diagram by entering:
+
+``plot -0.53 -0.5``
+
+which results in
+
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.55_-0.52.png)
 
 
 ## Output Files
@@ -317,6 +332,7 @@ This file lists, for each resonance $r$, the energy $E_r$, Lorentzian fit parame
 The resonance information is tab-separated, so that it can be copy&pasted into Excel or any other spreadsheet software.
 
 Additionally, plots of the chosen DOS peaks for each resonance, together with their Lorentzian fits, can be generated:
+
 ![](manual/6_plot_action.png)
 
 By inputting `p` or `pn`, these plots are generated for all thresholds or the $n^\text{th}$ threshold, respectively. The plot `.png` files are stored in the directory `{file_name}/resonance_plots/{threshold_energy}/`. In our example, the fitted DOS peak for the lowest detected resonance can, after selecting `p1`, be found under `he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png`:
