@@ -362,10 +362,21 @@ After being satisfied with all selections for this threshold, we can proceed to 
 
 ``ok``
 
-Now, just as before, the stabilization diagram overview between the thresholds at E=-0.5 and E=-0.222222 is shown:
+Now, just as before, the stabilization diagram overview between the thresholds at E=-0.5 and E=-0.22222 is shown:
 
-![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.53_-0.5-after.png)
+![](example/he_1Po_InfMass/resonance_plots/-0.22222/resonances_-0.3_-0.222-before.png)
 
+This area is much noisier, with more wrongly detected resonance states. From the inspection of the right-side scatter plot, it becomes quickly apparent that resonance 48 is entirely spurious; and resonances 51 and up are likely unreliable. We deactivate these resonances by
+
+``48R 51+R``
+
+and obtain
+
+![](example/he_1Po_InfMass/resonance_plots/-0.22222/resonances_-0.3_-0.222-after.png)
+
+This verification process opens a large amount of images; to close all of them, the image viewer process can be terminated by entering `close`. (Note that this only works if the process was started by **DOSmax**.)
+
+The loop over the thresholds can be terminated by typing `end`. This makes sense to do if the presently shown energy range already no longer contains good resonances. No resonances from higher, un-inspected thresholds will be listed in the results.
 
 ## Output Files
 
