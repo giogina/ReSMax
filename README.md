@@ -326,3 +326,6 @@ Upon completion, **DOSmax** generates:
 
 
 # Licence
+
+**DOSmax** is released under the [MIT License](LICENSE).  
+You are free to use, modify, and distribute this software with proper attribution.
