@@ -7,6 +7,8 @@
 
 The tool is designed for reproducibility and efficient large-scale analysis of stabilization data, helping researchers extract physical resonance parameters quickly and consistently.
 
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/all_resonances_-0.500.png)
+
 ## Features
 - Automated resonance detection from stabilization diagrams with minimal user input.
 - Supports multiple input formats (.dat, .dal, .ou).
@@ -18,9 +20,11 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
   - Summary table of detected resonances and their fitted parameters,
   - DOS peak & Lorentzian fit plots.
 
-![](example/he_1Po_InfMass/resonance_plots/-0.50000/all_resonances_-0.500.png)
-
-![](example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png)
+<div style="text-align: center;">
+  <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" target="_blank">
+    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" alt="Fitted DOS peak" style="max-width: 400px;">
+  </a>
+</div>
 
 
 
