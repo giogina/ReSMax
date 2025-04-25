@@ -339,7 +339,7 @@ to obtain a grid plot of DOS vs. energy data points vs. their corresponding Lore
 
 <div style="text-align: center;">
   <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" target="_blank">
-    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" alt="Fitted DOS peak" style="max-width: 500px;">
+    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" alt="Grid plot" style="max-width: 500px;">
   </a>
 </div>
 
@@ -397,7 +397,7 @@ By inputting `p` or `pn`, these plots are generated for all thresholds or the $n
 
 <div style="text-align: center;">
   <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" target="_blank">
-    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" alt="Fitted DOS peak" style="max-width: 500px;">
+    <img src="https://github.com/giogina/DOSmax/tree/main/example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" alt="Fitted DOS peak" style="max-width: 500px;">
   </a>
 </div>
 
