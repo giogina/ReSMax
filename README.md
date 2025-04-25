@@ -313,12 +313,58 @@ In some cases, the algorithm for automatic selection of best-fitting peaks for e
 
 To address the issue observed in our example case, we can first plot a zoomed-in version of the overview stabilization diagram by entering:
 
-``plot -0.53 -0.5``
+``plot -0.55 -0.52``
 
 which results in
 
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.55_-0.52_before.png)
 
-![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.55_-0.52.png)
+Several observations can be made in this plot: Firstly, some of the plateaus are annotated in red. These are sections in which the energy *descends* with growing $\gamma$, making it impossible to fit the DOS to a Lorentzian peak. This can happen either if the basis set is insufficiently sized to accurately describe this resonance state, or when one encounters fluorescence-active resonance states, as is likely the case e.g. for resonance states 7 and 8 here. **DOSmax** generally chooses fittable DOS peaks to represent resonances, if any are available. Therefore, even though the section annotated by `7R19` can barely be counted as a plateau, it is selected for resonance 7, rather than any of the descending sections observed for roots 25-27. The DOS scatter plot on the right side confirms the presence of very closely spaced resonance states around E=-0.546 and E=-0.527, but the complete absense of any resonance at E=-0.529 (where resonance 7 is currently being placed).
+
+This can be fixed by selecting a different plateau to represent resonance 7, such as the one formed by root 25. To select it, simply enter
+
+``7R25``
+
+This immediately triggers the creation of a new plot with the adjusted peak selection:
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.55_-0.52_after.png)
+
+Note that resonance 7 is now being correctly identified. Its energy, just like the one of resonance 8, is displayed in red on the right side, to signify that a descending section is chosen as its representative. 
+
+We may now verify whether the correct section has been chosen for other resonances, say, resonance 5. This can be achieved by entering
+
+``grid 5``
+
+to obtain a grid plot of DOS vs. energy data points vs. their corresponding Lorentizan fits for all roots forming a plateau at this resonance:
+
+<div style="text-align: center;">
+  <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" target="_blank">
+    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" alt="Fitted DOS peak" style="max-width: 500px;">
+  </a>
+</div>
+
+In the top-left panel of this grid, all DOS points are displayed together, to show any drift in the maxima, as well as the relative heights of the DOS values. We can see here that most roots form Lorentzian-like peaks in the same position; jsut the data points from root 25 (cyan) have their maximum values in a different location and fail to form a fittable shape. This is due to the descending nature of the plateau formed by root 25. As all other plateaus correspond to well-behaving DOS peaks, which are fitted well by a Lorentzian curve, we can conclude that the correct one (root 23, green) has been selected.
+
+Closer to each threshold, the resonance states become both more densely packed, and more difficult to describe by any given basis set. This is reflected in the stabilization diagram overview by a more noisy DOS scatter plot on the right sight, where the energy curves on the left side become wavy rather than properly stabilized:
+
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.53_-0.5-before.png)
+
+Most of the descending sections in the upper part of this plot are spurious, and should not be registered as resonances. We can easily de-select all resonances starting from number 15 by entering
+
+`15+R`
+
+to obtain
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.53_-0.5-after.png)
+
+After being satisfied with all selections for this threshold, we can proceed to the next one by typing
+
+``ok``
+
+Now, just as before, the stabilization diagram overview between the thresholds at E=-0.5 and E=-0.222222 is shown:
+
+![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.53_-0.5-after.png)
 
 
 ## Output Files
