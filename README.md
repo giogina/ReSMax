@@ -297,7 +297,7 @@ Selecting the **`r`** command triggers the automatic detection of resonances, wh
 ### Metastable Bound States
 The automatic analysis of the stabilization diagram begins by listing the metastable bound states (MBS), which are detected as local energy minima below the lowest populated ionization threshold. The MBS are listed together with the value of the basis set parameter $\gamma$ at which they appear. If the minimum appears very close to either end of the $\gamma$ range, a warning is issued; these MBS can likely be improved by widening the investigated range of $\gamma$ in the underlying stabilization diagram computation. The printed MBS are also listed in the `results.txt` file.
 
-![](manual/6_plot_action.png)
+![](manual/3_MBS.png)
 
 ## Manual Resonance Refinement
 
@@ -308,23 +308,25 @@ The DOS curves for each root are now sectioned into individual peaks, which are 
 
 ## Output Files
 
-Upon completion, **DOSmax** generates:
+Upon completion, **DOSmax** generates and opens a `results.txt` file listing all detected MBS and resonances, grouped by thresholds:
 
-- **results.txt:**  
-  - Tab-separated summary of all detected resonances, including:  
-    - **Energy** (\(E_r\))  
-    - **Width** (\(\Gamma\))  
-    - **Amplitude (A)**  
-    - **Baseline offset (\(y_0\))**  
-    - **Basis set parameter (\(\gamma(E_r)\))**
+![](manual/5_results_txt.png)
+
+This file lists, for each resonance $r$, the energy $E_r$, Lorentzian fit parameters (Width $\Gamma$, area $A$, offset $y_0$), as well as measures for the fit quality - as sum of squared restudies (SSR), and as relative SSR per point defined by $$\chi_{r} = \frac{\sqrt{SSR}}{N \cdot \rho_{\text{max}}^2}.$$ Additionally, the value of the basis set parameter $\gamma$ at which the chosen DOS peak's maximum occurs is given.
+
+The resonance information is tab-separated, so that it can be copy&pasted into Excel or any other spreadsheet software.
+
+Additionally, plots of the chosen DOS peaks for each resonance, together with their Lorentzian fits, can be generated:
+![](manual/6_plot_action.png)
+
+By inputting `p` or `pn`, these plots are generated for all thresholds or the $n^\text{th}$ threshold, respectively. The plot `.png` files are stored in the directory `{file_name}/resonance_plots/{threshold_energy}/`. In our example, the fitted DOS peak for the lowest detected resonance can, after selecting `p1`, be found under `he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png`:
 
 
-![](manual/3_MBS.png)
-
-- **Plot Outputs:**  
-  - **Stabilization diagrams**  
-  - **Resonance overview plots**  
-  - **Lorentzian fit plots** for each detected resonance
+<div style="text-align: center;">
+  <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" target="_blank">
+    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[1]-0.69313909.png" alt="Fitted DOS peak" style="max-width: 500px;">
+  </a>
+</div>
 
 
 
