@@ -20,9 +20,9 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
   - Summary table of detected resonances and their fitted parameters,
   - DOS peak & Lorentzian fit plots.
 
-<div style="text-align: center;">
+<div align="center">
   <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 400px;">
+    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" width="600">
   </a>
 </div>
 
@@ -338,9 +338,9 @@ We may now verify whether the correct section has been chosen for other resonanc
 to obtain a grid plot of DOS vs. energy data points vs. their corresponding Lorentizan fits for all roots forming a plateau at this resonance:
 
 
-<div style="text-align: center;">
+<div align="center">
   <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" alt="Fitted DOS peak" width="400">
+    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" alt="Fitted DOS peak" width="600">
   </a>
 </div>
 
