@@ -337,11 +337,6 @@ We may now verify whether the correct section has been chosen for other resonanc
 
 to obtain a grid plot of DOS vs. energy data points vs. their corresponding Lorentizan fits for all roots forming a plateau at this resonance:
 
-<div style="text-align: center;">
-  <a href="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" target="_blank">
-    <img src="example/he_1Po_InfMass/resonance_plots/-0.50000/[5]-0.54648347_grid.png" alt="Grid plot" style="max-width: 500px;">
-  </a>
-</div>
 
 <div style="text-align: center;">
   <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" target="_blank">
