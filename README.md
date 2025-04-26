@@ -22,7 +22,7 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
 
 <div style="text-align: center;">
   <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 300px;">
+    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 200px;">
   </a>
 </div>
 
