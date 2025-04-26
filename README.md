@@ -396,8 +396,8 @@ By inputting `p` or `pn`, these plots are generated for all thresholds or the $n
 
 
 <div style="text-align: center;">
-  <a href="https://github.com/giogina/DOSmax/tree/main/example/he_1Po_InfMass/resonance_plots/-0.50000/(1)-0.69313909.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/tree/main/example/he_1Po_InfMass/resonance_plots/-0.50000/(1)-0.69313909.png" alt="Fitted DOS peak" style="max-width: 500px;">
+  <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
+    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 400px;">
   </a>
 </div>
 
