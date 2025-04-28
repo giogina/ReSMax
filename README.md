@@ -75,7 +75,7 @@ Instructions vary by operating system:
 <details>
 <summary><strong>Windows</strong></summary>
 
-When using the [Windows executable](dist/DOSmax.exe), no preparation is needed.
+When using the [Windows executable](dist/), no preparation is needed.
 
 If you wish to instead run **DOSmax** as a python script:
 
@@ -118,7 +118,7 @@ During installation, check:
 
 ## 2. Clone the Repository
 
-Windows users may download the [Windows executable](dist/DOSmax.exe).
+Windows users may download the [Windows executable](dist/).
 
 Otherwise, clone the **DOSmax** repository from GitHub and navigate into the project directory:
 
