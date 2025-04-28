@@ -75,6 +75,10 @@ Instructions vary by operating system:
 <details>
 <summary><strong>Windows</strong></summary>
 
+When using the [Windows executable](dist/DOSmax.exe), no preparation is needed.
+
+If you wish to instead run **DOSmax** as a python script:
+
 1. Download and install Python from [https://www.python.org/downloads](https://www.python.org/downloads).
 During installation, check:
      - **Add Python to PATH**
@@ -113,7 +117,10 @@ During installation, check:
 </details>
 
 ## 2. Clone the Repository
-Clone the **DOSmax** repository from GitHub and navigate into the project directory:
+
+Windows users may download the [Windows executable](dist/DOSmax.exe).
+
+Otherwise, clone the **DOSmax** repository from GitHub and navigate into the project directory:
 
 ```bash
     git clone https://github.com/giogina/DOSmax.git
