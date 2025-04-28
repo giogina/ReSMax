@@ -11,6 +11,7 @@ import platform
 verbose = False
 
 # Freeze: pyinstaller --onefile DOSmax.py
+# Github workflow: Actions -> Run (manually), download .exe.zip, upload to dist/
 
 def in_venv():
     return (
