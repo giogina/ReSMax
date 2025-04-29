@@ -146,7 +146,56 @@ This will cause **DOSmax** to run using the system-wide Python.
 <details>
 <summary><strong>Windows</strong></summary>
 
-In Windows systems, run **DOSmax** using the console command:
+<details>
+<summary>Run DOSmax from the precompiled Windows executable</summary>
+
+If you downloaded the precompiled `DOSmax.exe` from GitHub:
+
+1. Open **Command Prompt** (`cmd`) or **PowerShell**
+2. Navigate to the folder containing `DOSmax.exe`
+3. Run the program with your input file:
+
+```bash
+DOSmax.exe -f path\to\input_file.dat
+```
+
+Replace `path\to\input_file.dat` with the actual path to your input file.  
+You can also **drag and drop the file into the terminal** to insert its full path.
+
+> ⚠️ **Note:** Double-clicking `DOSmax.exe` does nothing unless arguments are provided. Always run it from the command line.
+
+---
+
+<details>
+<summary>Optional: Add DOSmax.exe to your system PATH</summary>
+
+To run `DOSmax.exe` from any directory without typing its full path:
+
+1. Press `Windows + R`, type `sysdm.cpl`, and press Enter  
+2. Go to the **Advanced** tab → Click **Environment Variables**
+3. Under **System variables**, select the one called `Path` and click **Edit**
+4. Click **New**, then enter the full path to the folder containing `DOSmax.exe`  
+   (e.g., `C:\Users\YourName\Downloads` or wherever you put the file)
+5. Click **OK** on all dialogs
+
+Now you can simply run:
+
+```bash
+DOSmax.exe -f input_file.dat
+```
+
+from any terminal window.
+
+</details>
+
+</details>
+
+
+
+<details>
+<summary>Run DOSmax as a Python script</summary>
+
+Run **DOSmax** using the console command:
 ```bash
    py path/to/DOSmax.py -f path/to/input_file.dat
 ```
@@ -155,6 +204,8 @@ If that doesn't work, try:
 ```bash
    python path/to/DOSmax.py -f path/to/input_file.dat
 ```
+
+</details>
 </details>
 
 <details>
