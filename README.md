@@ -1,9 +1,9 @@
-# DOSmax
+# ReSMax
 **Efficient, automated resonance detection using the Stabilization Method.**
 
-**DOSmax** is a Python tool for identifying resonance states in quantum few-body systems, such as helium-like atoms, using the Stabilization Method. This technique analyzes how energy eigenvalues evolve with a systematically varied basis set parameter, revealing metastable bound states as well as resonance states, which appear as characteristic plateaus in the eigenvalue spectrum.
+**ReSMax** is a Python tool for identifying resonance states in quantum few-body systems, such as helium-like atoms, using the Stabilization Method. This technique analyzes how energy eigenvalues evolve with a systematically varied basis set parameter, revealing metastable bound states as well as resonance states, which appear as characteristic plateaus in the eigenvalue spectrum.
 
-**DOSmax** automates the full workflow: it computes the density of states (DOS) for each root, segments and fits DOS peaks using Lorentzian profiles, groups them into resonances, and extracts resonance parameters (energy and width) from the best-fitting DOS peaks — all with minimal manual input. Results can be interactively inspected and refined via plots and command-line controls, allowing for careful manual validation.
+**ReSMax** automates the full workflow: it computes the density of states (DOS) for each root, segments and fits DOS peaks using Lorentzian profiles, groups them into resonances, and extracts resonance parameters (energy and width) from the best-fitting DOS peaks — all with minimal manual input. Results can be interactively inspected and refined via plots and command-line controls, allowing for careful manual validation.
 
 The tool is designed for reproducibility and efficient large-scale analysis of stabilization data, helping researchers extract physical resonance parameters quickly and consistently.
 
@@ -21,31 +21,31 @@ The tool is designed for reproducibility and efficient large-scale analysis of s
   - DOS peak & Lorentzian fit plots.
 
 <div align="center">
-  <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" width="600">
+  <a href="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
+    <img src="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" width="600">
   </a>
 </div>
 
 
 
 ## How to cite
-If you use **DOSmax** in your research, please cite the following article (currently in preparation):
+If you use **ReSMax** in your research, please cite the following article (currently in preparation):
 
 > Johanna Langner, Anjan Sadhukhan, Henryk A. Witek, and Jayanta K. Saha.  
-> *An efficient algorithm to determine the resonance parameters of three-body systems using the stabilization method: A case study for natural parity 1,3L^π (L = 0, 1) doubly-excited resonance states of helium*.  
+> *An Algorithm for Automated Extraction of Resonance Parameters from the Stabilization Method*.  
 > Manuscript in preparation, 2025.  
-> [https://github.com/giogina/DOSmax](https://github.com/giogina/DOSmax)
+> [https://github.com/giogina/ReSMax](https://github.com/giogina/ReSMax)
  
 Download citation files here:
-- [BibTeX](./cite/DOSmax.bib)
-- [RIS](./cite/DOSmax.ris)
+- [BibTeX](./cite/ReSMax.bib)
+- [RIS](./cite/ReSMax.ris)
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Input File Formats](#supported-input-file-formats)
 - [Program Workflow](#program-workflow)
-  - [Run DOSmax](#run-dosmax)
+  - [Run ReSMax](#run-dosmax)
   - [Stabilization Diagram and Threshold Inputs](#stabilization-diagram-and-threshold-inputs)
   - [DOS Peak Fitting and Resonance Detection](#dos-peak-fitting-and-resonance-detection)
   - [Manual Resonance Refinement](#manual-resonance-refinement)
@@ -58,12 +58,12 @@ Download citation files here:
 - Python version: 3.10+
 - Supported OS: Linux, macOS, and Windows 10+.
 
-Follow these steps to install and run **DOSmax** on your system.
+Follow these steps to install and run **ReSMax** on your system.
 
 
 ## 1. Prerequisites
 
-Before running **DOSmax**, you need:
+Before running **ReSMax**, you need:
 
 - **Python 3.10+**
 - **`pip`** (Python package installer)
@@ -77,7 +77,7 @@ Instructions vary by operating system:
 
 When using the [Windows executable](dist/), no preparation is needed.
 
-If you wish to instead run **DOSmax** as a python script:
+If you wish to instead run **ReSMax** as a python script:
 
 1. Download and install Python from [https://www.python.org/downloads](https://www.python.org/downloads).
 During installation, check:
@@ -120,68 +120,68 @@ During installation, check:
 
 Windows users may download the [Windows executable](dist/).
 
-Otherwise, clone the **DOSmax** repository from GitHub and navigate into the project directory:
+Otherwise, clone the **ReSMax** repository from GitHub and navigate into the project directory:
 
 ```bash
-    git clone https://github.com/giogina/DOSmax.git
+    git clone https://github.com/giogina/ReSMax.git
 ```
 
-This downloads the latest version of **DOSmax** locally.
+This downloads the latest version of **ReSMax** locally.
 
 
 <details><summary>Optional: Manually install dependencies.</summary>
-On first startup, if any dependencies are missing, **DOSmax** automatically sets up a virtual environment and downloads the required libraries using `pip`.
+On first startup, if any dependencies are missing, **ReSMax** automatically sets up a virtual environment and downloads the required libraries using `pip`.
 
 Alternatively, if you would rather install packages system-wide:
 ```bash
-    cd DOSmax/
+    cd ReSMax/
     pip install -r requirements.txt
 ```
-This will cause **DOSmax** to run using the system-wide Python.
+This will cause **ReSMax** to run using the system-wide Python.
 </details>
 
-## 3. Run DOSmax
+## 3. Run ReSMax
 
 
 <details>
 <summary><strong>Windows</strong></summary>
 
 <details>
-<summary>Run DOSmax from the precompiled Windows executable</summary>
+<summary>Run **ReSMax** from the precompiled Windows executable</summary>
 
-If you downloaded the precompiled `DOSmax.exe` from GitHub:
+If you downloaded the precompiled `resmax.exe` from GitHub:
 
 1. Open **Command Prompt** (`cmd`) or **PowerShell**
-2. Navigate to the folder containing `DOSmax.exe`
+2. Navigate to the folder containing `resmax.exe`
 3. Run the program with your input file:
 
 ```bash
-DOSmax.exe -f path\to\input_file.dat
+resmax.exe -f path\to\input_file.dat
 ```
 
 Replace `path\to\input_file.dat` with the actual path to your input file.  
 You can also **drag and drop the file into the terminal** to insert its full path.
 
-> ⚠️ **Note:** Double-clicking `DOSmax.exe` does nothing unless arguments are provided. Always run it from the command line.
+> ⚠️ **Note:** Double-clicking `resmax.exe` does nothing unless arguments are provided. Always run it from the command line.
 
 ---
 
 <details>
-<summary>Optional: Add DOSmax.exe to your system PATH</summary>
+<summary>Optional: Add resmax.exe to your system PATH</summary>
 
-To run `DOSmax.exe` from any directory without typing its full path:
+To run `resmax.exe` from any directory without typing its full path:
 
 1. Press `Windows + R`, type `sysdm.cpl`, and press Enter  
 2. Go to the **Advanced** tab → Click **Environment Variables**
 3. Under **System variables**, select the one called `Path` and click **Edit**
-4. Click **New**, then enter the full path to the folder containing `DOSmax.exe`  
+4. Click **New**, then enter the full path to the folder containing `resmax.exe`  
    (e.g., `C:\Users\YourName\Downloads` or wherever you put the file)
 5. Click **OK** on all dialogs
 
 Now you can simply run:
 
 ```bash
-DOSmax.exe -f input_file.dat
+resmax.exe -f input_file.dat
 ```
 
 from any terminal window.
@@ -193,16 +193,16 @@ from any terminal window.
 
 
 <details>
-<summary>Run DOSmax as a Python script</summary>
+<summary>Run ReSMax as a Python script</summary>
 
-Run **DOSmax** using the console command:
+Run **ReSMax** using the console command:
 ```bash
-   py path/to/DOSmax.py -f path/to/input_file.dat
+   py path/to/resmax.py -f path/to/input_file.dat
 ```
 
 If that doesn't work, try:
 ```bash
-   python path/to/DOSmax.py -f path/to/input_file.dat
+   python path/to/resmax.py -f path/to/input_file.dat
 ```
 
 </details>
@@ -211,26 +211,26 @@ If that doesn't work, try:
 <details>
 <summary><strong>Linux / macOS</strong></summary>
 
-You can now execute **DOSmax** with your input file:
+You can now execute **ReSMax** with your input file:
 
 ```bash
-    path/to/DOSmax.py -f path/to/input_file.dat
+    path/to/resmax.py -f path/to/input_file.dat
 ```
 Replace `path/to/input_file.dat` with the actual path to your input file.
-For this to work (without calling python3), the `./DOSmax.py` script must be executable, which should be the case when cloned from GitHub. If it is not, first run:
+For this to work (without calling python3), the `./resmax.py` script must be executable, which should be the case when cloned from GitHub. If it is not, first run:
 ```bash
-   chmod +x DOSmax.py
+   chmod +x resmax.py
 ```
 
 <details><summary>Optional: Modify system PATH variable.</summary>
 
-Optionally, to call **DOSmax** from any directory as
+Optionally, to call **ReSMax** from any directory as
 ```bash
-    DOSmax.py -f path/to/input_file.dat
+    resmax.py -f path/to/input_file.dat
 ```
 add it to your system PATH by appending the following line to your `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`:
 ```bash
-    export PATH="$PATH:/path/to/DOSmax"
+    export PATH="$PATH:/path/to/resmax"
 ```
 Then, reload the shell configuration:
 ```bash
@@ -243,7 +243,7 @@ Then, reload the shell configuration:
 
 # Supported Input File Formats
 
-**DOSmax** accepts input files containing the **diagonalized eigenroot spectrum** for a range of values of the **basis set parameter** $\gamma$. The parser supports three file formats, which are identified automatically by their **file extensions**:
+**ReSMax** accepts input files containing the **diagonalized eigenroot spectrum** for a range of values of the **basis set parameter** $\gamma$. The parser supports three file formats, which are identified automatically by their **file extensions**:
 
 <details>
 <summary><strong>Tabular Format (.dat)</strong></summary>
@@ -302,7 +302,7 @@ E_1_root2  E_2_root2  ...    E_M_root2
 ```
 </details>
 
-If an unsupported extension is provided, **DOSmax** will raise an error and list the accepted formats.
+If an unsupported extension is provided, **ReSMax** will raise an error and list the accepted formats.
 
 
 <details>
@@ -320,9 +320,9 @@ If an unsupported extension is provided, **DOSmax** will raise an error and list
 
 # Program workflow
 
-Follow these instructions to run **DOSmax** and interpret its outputs. In the following, the workflow is demonstrated on the input file [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), which can be found in the example/ directory of this repository.
+Follow these instructions to run **ReSMax** and interpret its outputs. In the following, the workflow is demonstrated on the input file [he_1Po_InfMass.dal](example/he_1Po_InfMass.dal), which can be found in the example/ directory of this repository.
 
-All output files are written to a directory of the same name as the input file, in our case `he_1Po_InfMass/`. Therefore, it is recommended to first move the input file to a convenient location before running **DOSmax**.
+All output files are written to a directory of the same name as the input file, in our case `he_1Po_InfMass/`. Therefore, it is recommended to first move the input file to a convenient location before running **ReSMax**.
 
 
 ## Stabilization Diagram and Threshold Inputs
@@ -331,7 +331,7 @@ After loading and parsing a valid input file, a **stabilization diagram** is dis
 
 ![](example/he_1Po_InfMass/stabilization_diagram.png)
 
-Then, **DOSmax** enters the first interactive stage:
+Then, **ReSMax** enters the first interactive stage:
 
 ![](manual/2_threshold_input.png)
 
@@ -377,7 +377,7 @@ which results in
 
 ![](example/he_1Po_InfMass/resonance_plots/-0.50000/resonances_-0.55_-0.52_before.png)
 
-Several observations can be made in this plot: Firstly, some of the plateaus are annotated in red. These are sections in which the energy *descends* with growing $\gamma$, making it impossible to fit the DOS to a Lorentzian peak. This can happen either if the basis set is insufficiently sized to accurately describe this resonance state, or when one encounters fluorescence-active resonance states, as is likely the case e.g. for resonance states 7 and 8 here. **DOSmax** generally chooses fittable DOS peaks to represent resonances, if any are available. Therefore, even though the section annotated by `7R19` can barely be counted as a plateau, it is selected for resonance 7, rather than any of the descending sections observed for roots 25-27. The DOS scatter plot on the right side confirms the presence of very closely spaced resonance states around E=-0.546 and E=-0.527, but the complete absense of any resonance at E=-0.529 (where resonance 7 is currently being placed).
+Several observations can be made in this plot: Firstly, some of the plateaus are annotated in red. These are sections in which the energy *descends* with growing $\gamma$, making it impossible to fit the DOS to a Lorentzian peak. This can happen either if the basis set is insufficiently sized to accurately describe this resonance state, or when one encounters fluorescence-active resonance states, as is likely the case e.g. for resonance states 7 and 8 here. **ReSMax** generally chooses fittable DOS peaks to represent resonances, if any are available. Therefore, even though the section annotated by `7R19` can barely be counted as a plateau, it is selected for resonance 7, rather than any of the descending sections observed for roots 25-27. The DOS scatter plot on the right side confirms the presence of very closely spaced resonance states around E=-0.546 and E=-0.527, but the complete absense of any resonance at E=-0.529 (where resonance 7 is currently being placed).
 
 This can be fixed by selecting a different plateau to represent resonance 7, such as the one formed by root 25. To select it, simply enter
 
@@ -397,8 +397,8 @@ to obtain a grid plot of DOS vs. energy data points vs. their corresponding Lore
 
 
 <div align="center">
-  <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" alt="Fitted DOS peak" width="600">
+  <a href="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" target="_blank">
+    <img src="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B5%5D-0.54648347_grid.png" alt="Fitted DOS peak" width="600">
   </a>
 </div>
 
@@ -433,13 +433,13 @@ and obtain
 
 ![](example/he_1Po_InfMass/resonance_plots/-0.22222/resonances_-0.3_-0.222-after.png)
 
-This verification process opens a large amount of images; to close all of them, the image viewer process can be terminated by entering `close`. (Note that this only works if the process was started by **DOSmax**.)
+This verification process opens a large amount of images; to close all of them, the image viewer process can be terminated by entering `close`. (Note that this only works if the process was started by **ReSMax**.)
 
 The loop over the thresholds can be terminated by typing `end`. This makes sense to do if the presently shown energy range already no longer contains good resonances. No resonances from higher, un-inspected thresholds will be listed in the results.
 
 ## Output Files
 
-Upon completion, **DOSmax** generates and opens a `results.txt` file listing all detected MBS and resonances, grouped by thresholds:
+Upon completion, **ReSMax** generates and opens a `results.txt` file listing all detected MBS and resonances, grouped by thresholds:
 
 ![](manual/5_results_txt.png)
 
@@ -455,8 +455,8 @@ By inputting `p` or `pn`, these plots are generated for all thresholds or the $n
 
 
 <div style="text-align: center;">
-  <a href="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
-    <img src="https://github.com/giogina/DOSmax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 400px;">
+  <a href="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" target="_blank">
+    <img src="https://github.com/giogina/ReSMax/raw/main/example/he_1Po_InfMass/resonance_plots/-0.50000/%5B1%5D-0.69313909.png" alt="Fitted DOS peak" style="max-width: 400px;">
   </a>
 </div>
 
@@ -465,5 +465,5 @@ Additionally, for each plotted DOS peak, a `.txt` file of the same name is creat
 
 # Licence
 
-**DOSmax** is released under the [MIT License](LICENSE).  
+**ReSMax** is released under the [MIT License](LICENSE).  
 You are free to use, modify, and distribute this software with proper attribution.

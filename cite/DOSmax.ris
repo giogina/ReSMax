@@ -1,10 +1,10 @@
 TY  - JOUR
-TI  - An efficient algorithm to determine the resonance parameters of three-body systems using the stabilization method: A case study for natural parity 1,3L^π~(L=0,1) doubly-excited resonance states of helium
+TI  - An Algorithm for Automated Extraction of Resonance Parameters from the Stabilization Method
 AU  - Langner, Johanna
 AU  - Sadhukhan, Anjan
 AU  - Witek, Henryk A.
 AU  - Saha, Jayanta K.
 PY  - 2025
 N1  - Manuscript in preparation
-UR  - https://github.com/giogina/DOSmax
+UR  - https://github.com/giogina/ReSMax
 ER  -
