@@ -309,6 +309,11 @@ def resonance_summary_grid(project_dir, resonances, resonance_index=None, open_f
             ax.xaxis.set_major_locator(MaxNLocator(nbins=3, prune='both'))
 
             xmin, xmax = ax.get_xlim()
+
+            majorticks = ax.get_xticks()
+            step = np.diff(majorticks).min()
+            minor_step = 10 ** (np.ceil(np.log10(step)) - 1)
+
             minor_ticks = np.arange(np.floor(xmin / minor_step) * minor_step, np.ceil(xmax / minor_step) * minor_step, minor_step)
             ax.xaxis.set_minor_locator(FixedLocator(minor_ticks))
             ax.xaxis.set_minor_formatter(NullFormatter())
