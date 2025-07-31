@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+### User-defined constants ###
+MIN_NR_POINTS_PER_PEAK = 10  # Recommended: at least 5 (<4 points will cause the fit to fail; 4 points always have a perfect fit.)
+
 import sys
 import os
 import subprocess
@@ -197,7 +200,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
         energy_array = energy_array[mask]
         gamma_array = data["gamma"][1:-1][mask]
         dos_array = data[key][mask]
-        if len(energy_array) < 10:
+        if len(energy_array) :
             continue
         deriv_array = np.gradient(energy_array, gamma_array)  # to prevent the two-index jump in DOS from obscuring things
 
@@ -220,7 +223,7 @@ def fitDOS(data, energy_range, thresholds, project_dir):
             rhos = dos_array[v:v2]
             # valley_points.append([float(gamma_array[v]), float(energy_array[v])])
 
-            if len(rhos) < 10:  # too few points
+            if len(rhos) < MIN_NR_POINTS_PER_PEAK:  # too few points
                 continue
 
             dp = DOSpeak(energies, rhos, gammas, root)  # descending sections can be added; for these, rel_ssr_per_point = 10**6, energy() = min(energies)
